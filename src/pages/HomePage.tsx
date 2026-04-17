@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import MediaFeed from '@/src/features/feed/MediaFeed';
 import UserDirectory from '@/src/features/users/UserDirectory';
 import HomeActionArea from '@/src/features/home/HomeActionArea';
+import TrendingSidebar from '@/src/features/feed/TrendingSidebar';
 import { Button } from '@/src/components/ui/Button';
 import { Plus, LayoutGrid, ShieldAlert, Users, Megaphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -87,8 +88,9 @@ export default function HomePage() {
       </AnimatePresence>
 
       {view === 'feed' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <section className="lg:col-span-8">
+        <div className="flex flex-col lg:flex-row justify-center gap-12">
+          {/* Centered Content Section */}
+          <section className="w-full max-w-2xl">
             <div className="mb-6 flex items-center space-x-3 border-b border-white/5 pb-4">
               <LayoutGrid size={20} className="text-passion-red" />
               <h2 className="text-xl font-black tracking-widest text-white uppercase">Feed Global</h2>
@@ -104,8 +106,10 @@ export default function HomePage() {
             <MediaFeed />
           </section>
 
-          {/* Sidebar Ads (Desktop) */}
-          <aside className="hidden lg:block lg:col-span-4 space-y-8">
+          {/* Right Sidebar (Desktop only) */}
+          <aside className="hidden lg:block w-80 shrink-0 space-y-8">
+            <TrendingSidebar />
+            
             <div className="sticky top-24 space-y-8">
               <div className="p-6 rounded-3xl bg-white/5 border border-white/10">
                 <h3 className="text-xs font-black text-white/40 uppercase tracking-widest mb-6 flex items-center gap-2">
@@ -127,7 +131,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Community Stats or Info */}
+              {/* Community Info */}
               <div className="p-6 rounded-3xl bg-gradient-to-br from-primary-600/20 to-transparent border border-white/10">
                 <h4 className="text-sm font-black text-white uppercase italic mb-2">Comunidad Privé</h4>
                 <p className="text-xs text-white/60 leading-relaxed">

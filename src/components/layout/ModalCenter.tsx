@@ -1,11 +1,10 @@
-import { Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUIStore } from '@/src/store/uiStore';
 import { X } from 'lucide-react';
 
-const MediaUpload = lazy(() => import('@/src/features/upload/MediaUpload'));
-const StatsModal = lazy(() => import('@/src/components/layout/StatsModal'));
-const AdModal = lazy(() => import('@/src/components/admin/AdModal'));
+import MediaUpload from '@/src/features/upload/MediaUpload';
+import StatsModal from '@/src/components/layout/StatsModal';
+import AdModal from '@/src/components/admin/AdModal';
 
 export default function ModalCenter() {
   const { activeModal, modalData, closeModal } = useUIStore();
@@ -70,13 +69,7 @@ export default function ModalCenter() {
 
           {/* Content */}
           <div className="p-6 max-h-[80vh] overflow-y-auto no-scrollbar">
-            <Suspense fallback={
-              <div className="flex items-center justify-center h-40">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
-              </div>
-            }>
-              {renderContent()}
-            </Suspense>
+            {renderContent()}
           </div>
         </motion.div>
       </motion.div>
