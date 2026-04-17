@@ -1,61 +1,91 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Background: Deepest Black with a hint of Dark Crimson -->
-    <radialGradient id="bg_grad" cx="50%" cy="50%" r="50%" fx="50%" fy="20%">
-      <stop offset="0%" stop-color="#1a0505" />
+    <!-- Background Depth -->
+    <radialGradient id="bg_rad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#2a0505" />
       <stop offset="100%" stop-color="#020202" />
     </radialGradient>
-    
-    <!-- Passion Red Metallic Gradient -->
-    <linearGradient id="passion_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FF4D4D" />
-      <stop offset="50%" stop-color="#E60000" />
-      <stop offset="100%" stop-color="#990000" />
-    </linearGradient>
-    
-    <!-- Gold Metallic Gradient -->
-    <linearGradient id="gold_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F5E1A4" />
-      <stop offset="45%" stop-color="#D4AF37" />
-      <stop offset="55%" stop-color="#D4AF37" />
-      <stop offset="100%" stop-color="#B8860B" />
+
+    <!-- Ruby Glass Gradient -->
+    <linearGradient id="ruby_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff1a1a" />
+      <stop offset="40%" stop-color="#cc0000" />
+      <stop offset="100%" stop-color="#4d0000" />
     </linearGradient>
 
-    <!-- Luxury Shadow/Glow -->
-    <filter id="luxury_glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="15" result="blur" />
-      <feFlood flood-color="#E60000" flood-opacity="0.3" result="color" />
+    <!-- Gold Metallic -->
+    <linearGradient id="gold_metallic" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE08A" />
+      <stop offset="25%" stop-color="#D4AF37" />
+      <stop offset="50%" stop-color="#F9E29C" />
+      <stop offset="75%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#8A6008" />
+    </linearGradient>
+
+    <!-- Neon Glow Filter -->
+    <filter id="neon_red_glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="18" result="blur" />
+      <feFlood flood-color="#ff0000" flood-opacity="0.8" result="color" />
       <feComposite in="color" in2="blur" operator="in" result="glow" />
-      <feComposite in="SourceGraphic" in2="glow" operator="over" />
+      <feMerge>
+        <feMergeNode in="glow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
     </filter>
+
+    <!-- Specular Highlight for Glass -->
+    <linearGradient id="glass_shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.4" />
+      <stop offset="50%" stop-color="white" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="white" stop-opacity="0" />
+    </linearGradient>
   </defs>
-  
-  <!-- Outer Rounded Rectangle (App Icon Shape) -->
-  <rect width="512" height="512" rx="140" fill="url(#bg_grad)" />
-  
-  <!-- Subtle Outer Rim -->
-  <rect x="8" y="8" width="496" height="496" rx="136" stroke="url(#gold_grad)" stroke-width="2" stroke-opacity="0.1" />
 
-  <!-- Main Isotype Container -->
-  <g filter="url(#luxury_glow)">
-    <!-- The Diamond/Shield Base -->
-    <path d="M256 80L410 256L256 432L102 256L256 80Z" fill="url(#passion_grad)" fill-opacity="0.1" stroke="url(#gold_grad)" stroke-width="1" />
-    
-    <!-- Stylized Modern 'P' -->
-    <!-- Vertical Bar -->
-    <path d="M190 150V362" stroke="url(#passion_grad)" stroke-width="48" stroke-linecap="round" />
-    
-    <!-- Gold Accent Line in the Bar -->
-    <path d="M190 170V342" stroke="url(#gold_grad)" stroke-width="2" stroke-opacity="0.5" />
+  <!-- Base Icon Background -->
+  <rect width="512" height="512" rx="120" fill="url(#bg_rad)" />
 
-    <!-- The Curve -->
-    <path d="M190 150H290C345.228 150 390 194.772 390 250C390 305.228 345.228 350 290 350H190" 
-          stroke="url(#passion_grad)" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" />
-          
-    <!-- Gold Geometric Detail -->
-    <path d="M260 210L320 250L260 290" stroke="url(#gold_grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- The Neon Aura -->
+  <g filter="url(#neon_red_glow)">
+    
+    <!-- Gold Borders Base Layer -->
+    <!-- Shield Outline -->
+    <path d="M100 120C100 120 100 280 180 380C190 395 200 405 210 415L210 100C160 100 100 100 100 120Z" 
+          stroke="url(#gold_metallic)" stroke-width="6" stroke-linejoin="round" />
+    
+    <!-- Padlock Outline -->
+    <rect x="210" y="240" width="80" height="90" rx="4" stroke="url(#gold_metallic)" stroke-width="6" />
+    <path d="M230 240V210C230 193.431 243.431 180 260 180S290 193.431 290 210V240" 
+          stroke="url(#gold_metallic)" stroke-width="6" stroke-linecap="round" />
+    
+    <!-- Letter P Outline -->
+    <path d="M250 100H380C435.228 100 480 144.772 480 200C480 255.228 435.228 300 380 300H290V415" 
+          stroke="url(#gold_metallic)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Ruby Glass Fill -->
+    <!-- Shield Ruby -->
+    <path d="M100 120C100 120 100 280 180 380C190 395 200 405 210 415L210 100C160 100 100 100 100 120Z" 
+          fill="url(#ruby_grad)" fill-opacity="0.8" />
+    
+    <!-- Padlock Ruby -->
+    <rect x="210" y="240" width="80" height="90" rx="4" fill="url(#ruby_grad)" fill-opacity="0.9" />
+    
+    <!-- P Ruby -->
+    <path d="M260 100H380C435.228 100 480 144.772 480 200C480 255.228 435.228 300 380 300H290L290 415L260 415V100Z" 
+          fill="url(#ruby_grad)" fill-opacity="0.8" />
+
+    <!-- Glass Highlights (Shine) -->
+    <path d="M115 130C115 130 115 250 180 340" stroke="url(#glass_shine)" stroke-width="12" stroke-linecap="round" stroke-opacity="0.6" />
+    <rect x="215" y="245" width="70" height="40" rx="2" fill="url(#glass_shine)" fill-opacity="0.2" />
+    <path d="M300 115H380C420 115 455 145 455 200" stroke="url(#glass_shine)" stroke-width="12" stroke-linecap="round" stroke-opacity="0.5" />
+
+    <!-- Keyhole Detail -->
+    <circle cx="250" cy="275" r="8" fill="#1a0000" />
+    <path d="M250 280V295" stroke="#1a0000" stroke-width="6" stroke-linecap="round" />
+    
+    <!-- Internal Gold Guiding Lines -->
+    <path d="M250 135V365" stroke="url(#gold_metallic)" stroke-width="2" stroke-opacity="0.4" />
+    <path d="M300 140H380C410 140 435 165 435 200C435 235 410 260 380 260H290" 
+          stroke="url(#gold_metallic)" stroke-width="2" fill="none" stroke-opacity="0.4" />
+
   </g>
-  
-  <!-- Bottom Accent -->
-  <path d="M230 460H282" stroke="url(#gold_grad)" stroke-width="4" stroke-linecap="round" stroke-opacity="0.6" />
 </svg>

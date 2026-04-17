@@ -66,7 +66,7 @@ export default function Navbar() {
       <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link to="/" onClick={handleHomeClick} className="flex items-center space-x-2 group shrink-0">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 border border-white/10 shadow-lg group-hover:scale-110 transition-transform overflow-hidden neon-glow ring-1 ring-passion-red/20">
-            <img src="/icon.svg?v=3" alt="Privé Chat Logo" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+            <img src="/logo_real.jpg" alt="Privé Chat Logo" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
           </div>
           <span className="text-lg sm:text-xl font-black tracking-tighter passion-text drop-shadow-sm truncate max-w-[120px] sm:max-w-none font-display italic">PRIVÉ CHAT</span>
         </Link>

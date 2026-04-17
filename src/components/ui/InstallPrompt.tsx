@@ -53,12 +53,12 @@ export function InstallPrompt() {
         >
           <div className="glass-card p-4 flex items-center justify-between gap-4 shadow-2xl border-primary-600/20">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center shadow-lg shadow-primary-600/20">
-                <Download className="text-white" size={24} />
+              <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center shadow-lg shadow-passion-red/20 overflow-hidden neon-glow">
+                <img src="/logo_real.jpg" alt="Logo" className="h-full w-full object-cover" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">Instalar Privé Chat</h3>
-                <p className="text-xs text-white/60">Acceso rápido desde tu pantalla de inicio.</p>
+                <h3 className="text-sm font-black text-white italic uppercase tracking-tighter">Instalar Privé Chat</h3>
+                <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest">Acceso rápido VIP</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
