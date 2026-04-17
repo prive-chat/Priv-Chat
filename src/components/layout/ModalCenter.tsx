@@ -1,0 +1,85 @@
+import { Suspense, lazy } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useUIStore } from '@/src/store/uiStore';
+import { X } from 'lucide-react';
+
+const MediaUpload = lazy(() => import('@/src/features/upload/MediaUpload'));
+const StatsModal = lazy(() => import('@/src/components/layout/StatsModal'));
+const AdModal = lazy(() => import('@/src/components/admin/AdModal'));
+
+export default function ModalCenter() {
+  const { activeModal, modalData, closeModal } = useUIStore();
+
+  if (!activeModal) return null;
+
+  const renderContent = () => {
+    switch (activeModal) {
+      case 'upload':
+        return <MediaUpload onUploadComplete={closeModal} />;
+      case 'stats':
+        return <StatsModal type={modalData?.type} userId={modalData?.userId} onClose={closeModal} />;
+      case 'ad':
+        return <AdModal ad={modalData} onClose={closeModal} onSuccess={modalData?.onSuccess} />;
+      default:
+        return null;
+    }
+  };
+
+  const getTitle = () => {
+    switch (activeModal) {
+      case 'upload': return 'Subir Contenido';
+      case 'stats': return 'Estadísticas';
+      case 'ad': return modalData ? 'Editar Anuncio' : 'Nuevo Anuncio';
+      default: return '';
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      >
+        {/* Backdrop */}
+        <div 
+          className="absolute inset-0 bg-black/80 backdrop-blur-md" 
+          onClick={closeModal}
+        />
+
+        {/* Modal Shell */}
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          className="relative w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-white/5">
+            <h2 className="text-xl font-black uppercase tracking-widest passion-text">
+              {getTitle()}
+            </h2>
+            <button
+              onClick={closeModal}
+              className="p-2 rounded-full hover:bg-white/5 transition-colors text-white/40 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 max-h-[80vh] overflow-y-auto no-scrollbar">
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-40">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+              </div>
+            }>
+              {renderContent()}
+            </Suspense>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
