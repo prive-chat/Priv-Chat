@@ -72,16 +72,65 @@ export const messageService = {
 
   async markMessagesAsDeleted(userId: string, targetUserId: string) {
     // Mark messages sent by user as deleted_by_sender
-    await supabase
+    const { error: error1 } = await supabase
       .from('messages')
       .update({ deleted_by_sender: true })
       .match({ sender_id: userId, receiver_id: targetUserId });
 
     // Mark messages received by user as deleted_by_receiver
-    await supabase
+    const { error: error2 } = await supabase
       .from('messages')
       .update({ deleted_by_receiver: true })
       .match({ receiver_id: userId, sender_id: targetUserId });
+    
+    if (error1 || error2) console.error('Error marking messages as deleted:', error1 || error2);
+  },
+
+  async deleteIndividualMessage(messageId: string, userId: string, isSender: boolean) {
+    const update = isSender ? { deleted_by_sender: true } : { deleted_by_receiver: true };
+    const { error } = await supabase
+      .from('messages')
+      .update(update)
+      .eq('id', messageId);
+
+    if (error) throw error;
+  },
+
+  async toggleReaction(messageId: string, userId: string, emoji: string) {
+    // 1. Get current reactions
+    const { data: message, error: fetchError } = await supabase
+      .from('messages')
+      .select('reactions')
+      .eq('id', messageId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    let reactions: Record<string, string[]> = message.reactions || {};
+    
+    if (!reactions[emoji]) {
+      reactions[emoji] = [];
+    }
+
+    const userIndex = reactions[emoji].indexOf(userId);
+    if (userIndex > -1) {
+      // Remove
+      reactions[emoji].splice(userIndex, 1);
+      if (reactions[emoji].length === 0) {
+        delete reactions[emoji];
+      }
+    } else {
+      // Add
+      reactions[emoji].push(userId);
+    }
+
+    const { error: updateError } = await supabase
+      .from('messages')
+      .update({ reactions })
+      .eq('id', messageId);
+
+    if (updateError) throw updateError;
+    return reactions;
   },
 
   async sendMessage(senderId: string, receiverId: string, content: string, senderName: string, file?: File) {
@@ -150,6 +199,25 @@ export const messageService = {
     }
 
     return data as Message;
+  },
+
+  async markMessageAsRead(messageId: string) {
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .update({ 
+          is_read: true,
+          read_at: new Date().toISOString(),
+          is_delivered: true,
+          delivered_at: new Date().toISOString()
+        })
+        .eq('id', messageId)
+        .eq('is_read', false);
+
+      if (error && error.code !== '42703') throw error;
+    } catch (err) {
+      console.error('Error marking message as read:', err);
+    }
   },
 
   async markAsRead(userId: string, senderId: string) {

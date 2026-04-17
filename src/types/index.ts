@@ -35,6 +35,7 @@ export interface Message {
   delivered_at?: string;
   deleted_by_sender?: boolean;
   deleted_by_receiver?: boolean;
+  reactions?: Record<string, string[]>;
   created_at: string;
   sender?: UserProfile;
 }

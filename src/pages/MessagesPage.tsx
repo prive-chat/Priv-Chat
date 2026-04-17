@@ -45,8 +45,27 @@ export default function MessagesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<'clear' | 'delete' | null>(null);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const searchMutation = useMutation({
+    mutationFn: (query: string) => profileService.searchProfiles(query),
+    onSuccess: (data) => {
+      setSearchResults(data);
+    }
+  });
+
+  useEffect(() => {
+    if (searchTerm.trim().length >= 2) {
+      const timer = setTimeout(() => {
+        searchMutation.mutate(searchTerm);
+      }, 300);
+      return () => clearTimeout(timer);
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchTerm]);
 
   const { data: conversations = [] } = useQuery({
     queryKey: ['conversations', currentUser?.id],
@@ -113,6 +132,29 @@ export default function MessagesPage() {
     },
     onError: (error: any) => {
       setSendError(error.message || 'No se pudo eliminar el chat.');
+    }
+  });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: ({ id, isMe }: { id: string, isMe: boolean }) => 
+      messageService.deleteIndividualMessage(id, currentUser!.id, isMe),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages', targetUserId] });
+    }
+  });
+
+  const reactMutation = useMutation({
+    mutationFn: ({ id, emoji }: { id: string, emoji: string }) => 
+      messageService.toggleReaction(id, currentUser!.id, emoji),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages', targetUserId] });
+    }
+  });
+
+  const markReadMutation = useMutation({
+    mutationFn: (id: string) => messageService.markMessageAsRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', currentUser?.id] });
     }
   });
 
@@ -276,10 +318,12 @@ export default function MessagesPage() {
         )}>
           <ChatSidebar 
             conversations={conversations}
+            searchResults={searchResults}
             targetUserId={targetUserId}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onConversationSelect={(id) => navigate(`/messages?to=${id}`)}
+            isSearchingUsers={searchMutation.isPending}
           />
         </div>
 
@@ -307,6 +351,9 @@ export default function MessagesPage() {
           refPost={refPost}
           onClearRefPost={() => setRefPost(null)}
           isTyping={otherUserTyping}
+          onDeleteMessage={(id, isMe) => deleteMessageMutation.mutate({ id, isMe })}
+          onReactMessage={(id, emoji) => reactMutation.mutate({ id, emoji })}
+          onMessageVisible={(id) => markReadMutation.mutate(id)}
         />
       </div>
 

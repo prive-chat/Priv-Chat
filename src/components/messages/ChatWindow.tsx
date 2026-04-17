@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, FormEvent, ChangeEvent, RefObject, FC } from 'react';
-import { Send, Image as ImageIcon, Loader2, ChevronLeft, MoreVertical, Eraser, Trash2, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { Send, Image as ImageIcon, Loader2, ChevronLeft, MoreVertical, Eraser, Trash2, MessageSquare, CheckCircle2, Mic, StopCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { CardHeader, CardTitle, CardContent } from '@/src/components/ui/Card';
@@ -9,6 +9,7 @@ import { MessageBubble } from './MessageBubble';
 import { cn } from '@/src/lib/utils';
 import { Message, UserProfile, MediaItem } from '@/src/types';
 import { X, AlertCircle } from 'lucide-react';
+import { Virtuoso } from 'react-virtuoso';
 
 interface ChatWindowProps {
   targetUser: UserProfile | null;
@@ -31,6 +32,9 @@ interface ChatWindowProps {
   refPost?: MediaItem | null;
   onClearRefPost?: () => void;
   isTyping?: boolean;
+  onDeleteMessage?: (id: string, isMe: boolean) => void;
+  onReactMessage?: (id: string, emoji: string) => void;
+  onMessageVisible?: (id: string) => void;
 }
 
 export const ChatWindow: FC<ChatWindowProps> = ({
@@ -53,10 +57,45 @@ export const ChatWindow: FC<ChatWindowProps> = ({
   fileInputRef,
   refPost,
   onClearRefPost,
-  isTyping
+  isTyping,
+  onDeleteMessage,
+  onReactMessage,
+  onMessageVisible
 }) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const optionsRef = useRef<HTMLDivElement>(null);
+  const virtuosoRef = useRef<any>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (isRecording) {
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setRecordingTime(0);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [isRecording]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    if (virtuosoRef.current && messages.length > 0) {
+      virtuosoRef.current.scrollToIndex({
+        index: messages.length - 1,
+        behavior: 'smooth'
+      });
+    }
+  }, [messages.length]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -158,22 +197,37 @@ export const ChatWindow: FC<ChatWindowProps> = ({
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 bg-transparent">
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-white/20">
+      <CardContent className="flex-1 overflow-visible p-0 bg-transparent flex flex-col">
+        {messages.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-white/20 p-4">
             <MessageSquare size={48} className="mb-2 opacity-20" />
             <p className="text-sm">No hay mensajes todavía. ¡Di hola!</p>
           </div>
-        )}
-        {messages.map((msg) => (
-          <MessageBubble 
-            key={msg.id} 
-            message={msg} 
-            isMe={msg.sender_id === currentUser?.id} 
-            onMediaClick={onMediaClick}
+        ) : (
+          <Virtuoso
+            ref={virtuosoRef}
+            style={{ height: '100%', width: '100%' }}
+            data={messages}
+            initialTopMostItemIndex={messages.length - 1}
+            itemContent={(_, msg) => (
+              <div className="px-4 py-2 hover:bg-white/[0.02] transition-colors group">
+                <MessageBubble 
+                  key={msg.id} 
+                  message={msg} 
+                  isMe={msg.sender_id === currentUser?.id} 
+                  currentUserId={currentUser?.id}
+                  onMediaClick={onMediaClick}
+                  onDelete={onDeleteMessage}
+                  onReact={onReactMessage}
+                  onVisible={onMessageVisible}
+                />
+              </div>
+            )}
+            components={{
+              Footer: () => <div className="h-4" />
+            }}
           />
-        ))}
-        <div ref={scrollRef} />
+        )}
       </CardContent>
 
       <div className="p-4 border-t border-white/10 bg-black/20 shrink-0">
@@ -245,36 +299,76 @@ export const ChatWindow: FC<ChatWindowProps> = ({
         </AnimatePresence>
 
         <form onSubmit={onSendMessage} className="flex items-end space-x-2">
-          <div className="flex-1 flex flex-col space-y-2">
-            <div className="flex items-center space-x-2">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isSending}
-                className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-primary-400 hover:bg-primary-600/10 transition-all disabled:opacity-50"
-              >
-                <ImageIcon size={20} />
-              </button>
-              <Input
-                placeholder="Escribe un mensaje..."
-                value={newMessage}
-                onChange={(e) => onNewMessageChange(e.target.value)}
-                disabled={isSending}
-                className="flex-1"
-                variant="glass"
-              />
+          {!isRecording ? (
+            <>
+              <div className="flex-1 flex flex-col space-y-2">
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isSending}
+                    className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-primary-400 hover:bg-primary-600/10 transition-all disabled:opacity-50"
+                  >
+                    <ImageIcon size={20} />
+                  </button>
+                  <Input
+                    placeholder="Escribe un mensaje..."
+                    value={newMessage}
+                    onChange={(e) => onNewMessageChange(e.target.value)}
+                    disabled={isSending}
+                    className="flex-1"
+                    variant="glass"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsRecording(true)}
+                    disabled={isSending}
+                    className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-primary-400 hover:bg-primary-600/10 transition-all disabled:opacity-50"
+                  >
+                    <Mic size={20} />
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={onFileSelect}
+                  accept="image/*,video/*"
+                  className="hidden"
+                />
+              </div>
+              <Button type="submit" size="md" isLoading={isSending} disabled={!newMessage.trim() && !filePreview}>
+                <Send size={18} />
+              </Button>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-between bg-primary-600/10 border border-primary-500/20 rounded-xl p-2 px-4 animate-pulse-slow">
+              <div className="flex items-center space-x-3">
+                <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-sm font-bold text-white tabular-nums">{formatTime(recordingTime)}</span>
+                <span className="text-xs text-white/40 uppercase tracking-widest font-black">Grabando audio...</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsRecording(false)}
+                  className="p-2 text-white/40 hover:text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // In a real app, this would stop recording and send the blob
+                    setIsRecording(false);
+                    onSendMessage({ preventDefault: () => {} } as any);
+                  }}
+                  className="p-2 bg-primary-600 rounded-full text-white shadow-lg"
+                >
+                  <StopCircle size={20} />
+                </button>
+              </div>
             </div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={onFileSelect}
-              accept="image/*,video/*"
-              className="hidden"
-            />
-          </div>
-          <Button type="submit" size="md" isLoading={isSending} disabled={!newMessage.trim() && !filePreview}>
-            <Send size={18} />
-          </Button>
+          )}
         </form>
       </div>
     </div>
