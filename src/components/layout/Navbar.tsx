@@ -18,13 +18,12 @@ export default function Navbar() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleHomeClick = (e: React.MouseEvent) => {
-    e.preventDefault();
     if (location.pathname === '/') {
+      e.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       queryClient.invalidateQueries({ queryKey: ['media'] });
-    } else {
-      navigate('/');
     }
+    // Si no estamos en '/', dejamos que el componente Link maneje la navegación normalmente
   };
 
   const handleLogout = async () => {
