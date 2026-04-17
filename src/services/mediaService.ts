@@ -208,13 +208,26 @@ export const mediaService = {
     if (error) throw error;
   },
 
-  async uploadMedia(userId: string, file: File, type: 'image' | 'video', caption: string | null) {
+  async uploadMedia(
+    userId: string, 
+    file: File, 
+    type: 'image' | 'video', 
+    caption: string | null,
+    onProgress?: (progress: number) => void
+  ) {
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}/${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
     
     const { error: uploadError } = await supabase.storage
       .from('media')
-      .upload(fileName, file);
+      .upload(fileName, file, {
+        onUploadProgress: (evt: any) => {
+          if (onProgress) {
+            const progress = Math.round((evt.loaded / evt.total) * 100);
+            onProgress(progress);
+          }
+        }
+      } as any);
 
     if (uploadError) throw uploadError;
 

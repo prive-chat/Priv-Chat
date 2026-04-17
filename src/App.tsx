@@ -6,6 +6,7 @@ import ModalCenter from './components/layout/ModalCenter';
 import ScrollToTop from './components/layout/ScrollToTop';
 import { InstallPrompt } from './components/ui/InstallPrompt';
 import NotificationManager from './components/notifications/NotificationManager';
+import ToastContainer from './components/notifications/ToastContainer';
 import { motion } from 'motion/react';
 
 // Lazy load pages
@@ -62,6 +63,7 @@ export default function App() {
       <ScrollToTop />
       <InstallPrompt />
       <div className="min-h-screen">
+        <ToastContainer />
         <Suspense fallback={<LoadingScreen />}>
           {user ? (
             <>
