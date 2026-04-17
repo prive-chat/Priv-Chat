@@ -163,9 +163,21 @@ export const profileService = {
   },
 
   async deleteAccount(userId: string) {
-    // Llamamos a la función RPC que borra al usuario de auth.users
-    // Esto disparará el borrado en cascada de profiles y todas las tablas relacionadas
-    // gracias a las claves foráneas con ON DELETE CASCADE definidas en el esquema.
+    // 1. Intentar limpiar el almacenamiento físico antes de borrar el registro
+    try {
+      const { data: files } = await supabase.storage
+        .from('media')
+        .list(userId);
+
+      if (files && files.length > 0) {
+        const pathsToRemove = files.map(f => `${userId}/${f.name}`);
+        await supabase.storage.from('media').remove(pathsToRemove);
+      }
+    } catch (err) {
+      console.error('Error cleaning up storage during account deletion:', err);
+    }
+
+    // 2. Llamamos a la función RPC que borra al usuario de auth.users
     const { error } = await supabase.rpc('delete_own_user');
 
     if (error) {

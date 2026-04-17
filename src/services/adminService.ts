@@ -106,12 +106,43 @@ export const adminService = {
   },
 
   async deleteAd(id: string) {
-    const { error } = await supabase
-      .from('ads')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    try {
+      // 1. Fetch the ad first to get the media URL
+      const { data: ad, error: fetchError } = await supabase
+        .from('ads')
+        .select('image_url')
+        .eq('id', id)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+
+      if (ad?.image_url) {
+        // 2. Extract path from URL
+        const urlParts = ad.image_url.split('/storage/v1/object/public/media/');
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+          // 3. Delete from storage
+          const { error: storageError } = await supabase.storage
+            .from('media')
+            .remove([filePath]);
+          
+          if (storageError) {
+            console.error('Error deleting ad file from storage:', storageError);
+          }
+        }
+      }
+
+      // 4. Delete from database
+      const { error } = await supabase
+        .from('ads')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (err) {
+      console.error('Error in deleteAd:', err);
+      throw err;
+    }
   },
 
   async uploadAdMedia(file: File): Promise<{ url: string; type: 'image' | 'video' }> {

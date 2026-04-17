@@ -200,12 +200,44 @@ export const mediaService = {
   },
 
   async deleteMedia(id: string) {
-    const { error } = await supabase
-      .from('media')
-      .delete()
-      .eq('id', id);
+    try {
+      // 1. Fetch the media item first to get the URL
+      const { data: media, error: fetchError } = await supabase
+        .from('media')
+        .select('url')
+        .eq('id', id)
+        .single();
 
-    if (error) throw error;
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+
+      if (media?.url) {
+        // 2. Extract path from URL
+        // URL format: https://[project].supabase.co/storage/v1/object/public/media/path/to/file
+        const urlParts = media.url.split('/storage/v1/object/public/media/');
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+          // 3. Delete from storage
+          const { error: storageError } = await supabase.storage
+            .from('media')
+            .remove([filePath]);
+          
+          if (storageError) {
+            console.error('Error deleting file from storage:', storageError);
+          }
+        }
+      }
+
+      // 4. Delete from database
+      const { error } = await supabase
+        .from('media')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error('Error in deleteMedia:', err);
+      throw err;
+    }
   },
 
   async uploadMedia(

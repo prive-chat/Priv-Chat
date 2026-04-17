@@ -14,6 +14,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/Button';
 import { adminService } from '../services/adminService';
+import { mediaService } from '../services/mediaService';
 import type { SystemStats, AuditLog } from '../services/adminService';
 import type { UserProfile, MediaItem, Ad } from '../types';
 import { cn } from '../lib/utils';
@@ -131,8 +132,7 @@ export default function AdminPage() {
     
     try {
       if (type === 'media') {
-        const { error } = await supabase.from('media').delete().eq('id', id);
-        if (error) throw error;
+        await mediaService.deleteMedia(id);
         setMedia(media.filter(m => m.id !== id));
       } else {
         await adminService.deleteAd(id);
