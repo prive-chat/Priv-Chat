@@ -7,7 +7,7 @@ import { Button } from '@/src/components/ui/Button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Heart, ArrowLeft, MessageSquare, CheckCircle2, Maximize2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { MediaViewer } from '@/src/components/ui/MediaViewer';
 import { useAuth } from '@/src/hooks/useAuth';
 import { cn } from '@/src/lib/utils';

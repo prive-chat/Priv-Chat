@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './Button';
 
 export function InstallPrompt() {

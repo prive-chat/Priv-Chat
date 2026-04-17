@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { mediaService } from '@/src/services/mediaService';
 import { Button } from '@/src/components/ui/Button';
 import { Upload, X, AlertCircle, Loader2, Image as ImageIcon, Video as VideoIcon } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useNotificationStore } from '@/src/store/notificationStore';
 import imageCompression from 'browser-image-compression';

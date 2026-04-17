@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { profileService } from '@/src/services/profileService';
 import { Card } from '@/src/components/ui/Card';
 import { BadgeCheck, Calendar, User as UserIcon, Loader2 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { OptimizedImage } from '@/src/components/ui/OptimizedImage';

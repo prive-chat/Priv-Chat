@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, 
   Users, 
@@ -10,22 +10,22 @@ import {
   Lock,
   Megaphone
 } from 'lucide-react';
-import { supabase } from '@/src/lib/supabase';
-import { useAuth } from '@/src/hooks/useAuth';
-import { Button } from '@/src/components/ui/Button';
-import { adminService } from '@/src/services/adminService';
-import type { SystemStats, AuditLog } from '@/src/services/adminService';
-import type { UserProfile, MediaItem, Ad } from '@/src/types';
-import { cn } from '@/src/lib/utils';
-import { ConfirmModal } from '@/src/components/ui/ConfirmModal';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
+import { Button } from '../components/ui/Button';
+import { adminService } from '../services/adminService';
+import type { SystemStats, AuditLog } from '../services/adminService';
+import type { UserProfile, MediaItem, Ad } from '../types';
+import { cn } from '../lib/utils';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 
 // Modular Components
-import { AdminDashboard } from '@/src/components/admin/AdminDashboard';
-import { AdminUsers } from '@/src/components/admin/AdminUsers';
-import { AdminModeration } from '@/src/components/admin/AdminModeration';
-import { AdminSecurity } from '@/src/components/admin/AdminSecurity';
-import { AdminBroadcast } from '@/src/components/admin/AdminBroadcast';
-import { AdminAds } from '@/src/components/admin/AdminAds';
+import { AdminDashboard } from '../components/admin/AdminDashboard';
+import { AdminUsers } from '../components/admin/AdminUsers';
+import { AdminModeration } from '../components/admin/AdminModeration';
+import { AdminSecurity } from '../components/admin/AdminSecurity';
+import { AdminBroadcast } from '../components/admin/AdminBroadcast';
+import { AdminAds } from '../components/admin/AdminAds';
 
 type AdminTab = 'dashboard' | 'users' | 'moderation' | 'ads' | 'security' | 'broadcast';
 
@@ -54,7 +54,6 @@ export default function AdminPage() {
   const [broadcastStatus, setBroadcastStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   
   useEffect(() => {
-    console.log('AdminPage mounting...');
     fetchData();
   }, []);
 
@@ -87,7 +86,6 @@ export default function AdminPage() {
   };
 
   const handleToggleVerification = async (userId: string, currentStatus: boolean) => {
-    // Optimistic Update
     const previousProfiles = [...profiles];
     setProfiles(profiles.map(p => p.id === userId ? { ...p, is_verified: !currentStatus } : p));
 
@@ -100,7 +98,7 @@ export default function AdminPage() {
       if (error) throw error;
     } catch (err) {
       console.error('Error toggling verification:', err);
-      setProfiles(previousProfiles); // Rollback
+      setProfiles(previousProfiles);
     }
   };
 

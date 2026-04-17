@@ -7,17 +7,17 @@ import ScrollToTop from './components/layout/ScrollToTop';
 import { InstallPrompt } from './components/ui/InstallPrompt';
 import NotificationManager from './components/notifications/NotificationManager';
 import ToastContainer from './components/notifications/ToastContainer';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
-// Lazy load pages
+// Import pages directly to prevent lazy loading context issues
 import AuthPage from './pages/AuthPage';
 import SettingsPage from './pages/SettingsPage';
-const HomePage = lazy(() => import('./pages/HomePage'));
-const MessagesPage = lazy(() => import('./pages/MessagesPage'));
-const AdminPage = lazy(() => import('./pages/AdminPage'));
-const UserProfilePage = lazy(() => import('./pages/UserProfilePage'));
-const PostPage = lazy(() => import('./pages/PostPage'));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+import HomePage from './pages/HomePage';
+import MessagesPage from './pages/MessagesPage';
+import UserProfilePage from './pages/UserProfilePage';
+import PostPage from './pages/PostPage';
+import NotFoundPage from './pages/NotFoundPage';
+import AdminPage from './pages/AdminPage';
 
 const LoadingScreen = ({ message = "Cargando..." }) => (
   <div className="flex min-h-screen items-center justify-center bg-black">

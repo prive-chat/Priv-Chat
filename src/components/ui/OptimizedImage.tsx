@@ -1,6 +1,6 @@
 import { useState, useMemo, ImgHTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/src/lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Image as ImageIcon } from 'lucide-react';
 import { getOptimizedImageUrl, ImageTransformOptions } from '@/src/lib/images';
 

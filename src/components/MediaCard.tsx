@@ -1,16 +1,16 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { Heart, MessageSquare, Trash2, Maximize2, CheckCircle2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { mediaService } from '@/src/services/mediaService';
-import { useAuth } from '@/src/hooks/useAuth';
-import { Card, CardContent } from '@/src/components/ui/Card';
-import { cn } from '@/src/lib/utils';
-import { MediaItem } from '@/src/types';
-import { OptimizedImage } from '@/src/components/ui/OptimizedImage';
-import { IMAGE_SIZES } from '@/src/lib/images';
+import { mediaService } from '../services/mediaService';
+import { useAuth } from '../hooks/useAuth';
+import { Card, CardContent } from './ui/Card';
+import { cn } from '../lib/utils';
+import { MediaItem } from '../types';
+import { OptimizedImage } from './ui/OptimizedImage';
+import { IMAGE_SIZES } from '../lib/images';
 
 interface MediaCardProps {
   item: MediaItem;

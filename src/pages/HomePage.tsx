@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
-import MediaFeed from '@/src/features/feed/MediaFeed';
-import UserDirectory from '@/src/features/users/UserDirectory';
-import HomeActionArea from '@/src/features/home/HomeActionArea';
-import TrendingSidebar from '@/src/features/feed/TrendingSidebar';
-import { Button } from '@/src/components/ui/Button';
+import MediaFeed from '../features/feed/MediaFeed';
+import UserDirectory from '../features/users/UserDirectory';
+import HomeActionArea from '../features/home/HomeActionArea';
+import TrendingSidebar from '../features/feed/TrendingSidebar';
+import { Button } from '../components/ui/Button';
 import { Plus, LayoutGrid, ShieldAlert, Users, Megaphone } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useAuth } from '@/src/hooks/useAuth';
-import { useUIStore } from '@/src/store/uiStore';
-import { cn } from '@/src/lib/utils';
-import { Ad } from '@/src/types';
-import { publicAdService } from '@/src/services/publicAdService';
-import { AdCard } from '@/src/components/ui/AdCard';
-import UserIdentityBar from '@/src/components/layout/UserIdentityBar';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../hooks/useAuth';
+import { useUIStore } from '../store/uiStore';
+import { cn } from '../lib/utils';
+import { Ad } from '../types';
+import { publicAdService } from '../services/publicAdService';
+import { AdCard } from '../components/ui/AdCard';
+import UserIdentityBar from '../components/layout/UserIdentityBar';
 
 export default function HomePage() {
   const [view, setView] = useState<'feed' | 'users'>('feed');

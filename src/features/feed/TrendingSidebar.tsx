@@ -3,7 +3,7 @@ import { mediaService } from '@/src/services/mediaService';
 import { useAuth } from '@/src/hooks/useAuth';
 import { Heart, TrendingUp, Search, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { profileService } from '@/src/services/profileService';
 import { UserProfile } from '@/src/types';

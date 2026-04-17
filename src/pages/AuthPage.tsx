@@ -3,7 +3,7 @@ import { supabase } from '@/src/lib/supabase';
 import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/src/components/ui/Card';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function AuthPage() {

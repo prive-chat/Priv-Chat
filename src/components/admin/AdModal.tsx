@@ -22,6 +22,10 @@ export default function AdModal({ onClose, onSuccess, ad }: AdModalProps) {
       type: 'image',
       starts_at: new Date().toISOString().split('T')[0],
       ends_at: '',
+      cost_per_click: 0,
+      cost_per_impression: 0,
+      total_budget: 0,
+      priority: 0,
     }
   );
   
@@ -197,6 +201,53 @@ export default function AdModal({ onClose, onSuccess, ad }: AdModalProps) {
                 value={formData.ends_at?.split('T')[0] || ''}
                 onChange={e => setFormData({ ...formData, ends_at: e.target.value })}
               />
+            </div>
+
+            <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/10 space-y-4">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-green-400">Configuración Comercial</h4>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Costo por Click ($)"
+                  type="number"
+                  step="0.01"
+                  value={formData.cost_per_click}
+                  onChange={e => setFormData({ ...formData, cost_per_click: parseFloat(e.target.value) })}
+                />
+                <Input
+                  label="Costo por 1000 Imp. ($)"
+                  type="number"
+                  step="0.01"
+                  value={formData.cost_per_impression}
+                  onChange={e => setFormData({ ...formData, cost_per_impression: parseFloat(e.target.value) })}
+                />
+              </div>
+
+              <Input
+                label="Presupuesto Total Meta ($)"
+                type="number"
+                step="1"
+                value={formData.total_budget}
+                onChange={e => setFormData({ ...formData, total_budget: parseFloat(e.target.value) })}
+                placeholder="Ej: 500"
+              />
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-black uppercase tracking-widest text-green-400">Prioridad / Peso</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  step="1"
+                  value={formData.priority || 0}
+                  onChange={e => setFormData({ ...formData, priority: parseInt(e.target.value) })}
+                  className="w-full accent-green-500"
+                />
+                <div className="flex justify-between text-[10px] font-bold text-white/20 uppercase">
+                  <span>Normal (0)</span>
+                  <span>Destacado (10)</span>
+                </div>
+              </div>
             </div>
         </div>
       </div>

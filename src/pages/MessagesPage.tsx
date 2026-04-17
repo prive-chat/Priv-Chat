@@ -8,7 +8,7 @@ import { notificationService } from '@/src/services/notificationService';
 import { Button } from '@/src/components/ui/Button';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/src/hooks/useAuth';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { MediaViewer } from '@/src/components/ui/MediaViewer';
 import { supabase } from '@/src/lib/supabase';
 import { cn } from '@/src/lib/utils';

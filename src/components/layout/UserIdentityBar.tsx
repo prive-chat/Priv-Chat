@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/src/hooks/useAuth';
 import { Heart, Users, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';

@@ -11,6 +11,7 @@ export const publicAdService = {
         .eq('placement', placement)
         .lte('starts_at', new Date().toISOString())
         .or(`ends_at.is.null,ends_at.gte."${new Date().toISOString()}"`)
+        .order('priority', { ascending: false })
         .order('created_at', { ascending: false });
 
       if (error) {

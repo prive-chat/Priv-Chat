@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '@/src/lib/supabase';
-import { Button } from '@/src/components/ui/Button';
+import { supabase } from '../../lib/supabase';
+import { Button } from '../ui/Button';
 import { Home, LogOut, ShieldCheck, ShieldAlert, Settings, Menu, X, MessageSquare } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
-import { useAuth } from '@/src/hooks/useAuth';
-import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '../../lib/utils';
+import { useAuth } from '../../hooks/useAuth';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 import NotificationDropdown from '../notifications/NotificationDropdown';
 

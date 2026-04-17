@@ -20,7 +20,7 @@ import {
   Clock,
   Camera
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { MediaViewer } from '@/src/components/ui/MediaViewer';
 import { mediaService } from '@/src/services/mediaService';

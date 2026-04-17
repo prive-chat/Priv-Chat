@@ -4,7 +4,7 @@ import { Users, Image as ImageIcon, Send, CheckCircle2, TrendingUp, Activity } f
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { SystemStats } from '@/src/services/adminService';
 import { UserProfile } from '@/src/types';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { cn } from '@/src/lib/utils';
 
 interface AdminDashboardProps {

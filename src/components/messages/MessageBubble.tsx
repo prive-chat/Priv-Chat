@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Check, CheckCheck, Maximize2, ExternalLink } from 'lucide-react';
 import { cn } from '@/src/lib/utils';

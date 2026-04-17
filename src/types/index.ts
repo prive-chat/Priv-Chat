@@ -50,6 +50,11 @@ export interface Ad {
   status: 'active' | 'paused' | 'scheduled';
   impressions: number;
   clicks: number;
+  cost_per_click?: number;
+  cost_per_impression?: number;
+  total_budget?: number;
+  spent_budget?: number;
+  priority?: number;
   starts_at: string;
   ends_at?: string;
   created_at: string;

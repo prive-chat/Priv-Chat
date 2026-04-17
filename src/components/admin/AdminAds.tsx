@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from '@/src/components/ui/Card';
 import { Button } from '@/src/components/ui/Button';
-import { Plus, Eye, MousePointer2, Calendar, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Eye, MousePointer2, Calendar, Trash2, Edit2, DollarSign, BarChart3 } from 'lucide-react';
 import { Ad } from '@/src/types';
 import { cn } from '@/src/lib/utils';
 import { useUIStore } from '@/src/store/uiStore';
@@ -81,28 +81,55 @@ export function AdminAds({ ads, onDeleteAd, onRefresh }: AdminAdsProps) {
               </div>
               
               <div className="grid grid-cols-3 gap-4 my-4">
-                <div className="text-center p-2 bg-white/5 rounded-lg">
+                <div className="text-center p-2 bg-white/5 rounded-lg border border-white/5 group/stat">
                   <div className="flex items-center justify-center gap-1 text-blue-400 mb-1">
                     <Eye size={12} />
                     <span className="text-[10px] font-black">{ad.impressions}</span>
                   </div>
                   <p className="text-[8px] text-white/20 uppercase font-bold">Vistas</p>
                 </div>
-                <div className="text-center p-2 bg-white/5 rounded-lg">
+                <div className="text-center p-2 bg-white/5 rounded-lg border border-white/5 group/stat">
                   <div className="flex items-center justify-center gap-1 text-green-400 mb-1">
                     <MousePointer2 size={12} />
                     <span className="text-[10px] font-black">{ad.clicks}</span>
                   </div>
                   <p className="text-[8px] text-white/20 uppercase font-bold">Clicks</p>
                 </div>
-                <div className="text-center p-2 bg-white/5 rounded-lg">
+                <div className="text-center p-2 bg-white/5 rounded-lg border border-white/5 group/stat">
                   <div className="flex items-center justify-center gap-1 text-primary-400 mb-1">
-                    <Calendar size={12} />
+                    <BarChart3 size={12} />
                     <span className="text-[10px] font-black">
                       {ad.impressions > 0 ? ((ad.clicks / ad.impressions) * 100).toFixed(1) : 0}%
                     </span>
                   </div>
                   <p className="text-[8px] text-white/20 uppercase font-bold">CTR</p>
+                </div>
+              </div>
+
+              {/* Financial Box */}
+              <div className="mb-4 p-3 rounded-xl bg-gradient-to-br from-green-500/5 to-transparent border border-green-500/10">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">Ingresos Estimados</span>
+                  <div className="flex items-center gap-1 text-green-400">
+                    <DollarSign size={10} />
+                    <span className="text-xs font-black">
+                      {((ad.clicks * (ad.cost_per_click || 0)) + (ad.impressions * (ad.cost_per_impression || 0) / 1000)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-green-500/40"
+                    style={{ 
+                      width: ad.total_budget ? `${Math.min(100, (((ad.clicks * (ad.cost_per_click || 0)) + (ad.impressions * (ad.cost_per_impression || 0) / 1000)) / ad.total_budget) * 100)}%` : '0%'
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-[8px] text-white/20 font-bold uppercase tracking-tighter">Consumido</span>
+                  <span className="text-[8px] text-white/20 font-bold uppercase tracking-tighter">
+                    {ad.total_budget ? `Meta: $${ad.total_budget}` : 'Sin límite'}
+                  </span>
                 </div>
               </div>
               

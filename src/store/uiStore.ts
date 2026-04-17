@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { UserProfile } from '@/src/types';
+import { UserProfile } from '../types';
 
 export type ModalType = 'upload' | 'stats' | 'ad' | 'broadcast' | 'confirm' | null;
 

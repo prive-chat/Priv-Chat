@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Ad } from '@/src/types';
 import { publicAdService } from '@/src/services/publicAdService';
 import { ExternalLink, Megaphone } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { cn } from '@/src/lib/utils';
 
 interface AdCardProps {

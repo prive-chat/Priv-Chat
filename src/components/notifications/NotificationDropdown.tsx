@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { notificationService } from '@/src/services/notificationService';
-import { useAuth } from '@/src/hooks/useAuth';
+import { notificationService } from '../../services/notificationService';
+import { useAuth } from '../../hooks/useAuth';
 import { Bell, Check, Trash2, Loader2, MessageSquare, ShieldCheck, Info, X, Heart, UserPlus, UserCheck } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
-import { cn } from '@/src/lib/utils';
-import { supabase } from '@/src/lib/supabase';
+import { cn } from '../../lib/utils';
+import { supabase } from '../../lib/supabase';
 
 export default function NotificationDropdown() {
   const { user } = useAuth();

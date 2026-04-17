@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { mediaService } from '@/src/services/mediaService';
+import { mediaService } from '../../services/mediaService';
 import { Loader2 } from 'lucide-react';
-import { useAuth } from '@/src/hooks/useAuth';
-import { ConfirmModal } from '@/src/components/ui/ConfirmModal';
-import { MediaViewer } from '@/src/components/ui/MediaViewer';
-import { supabase } from '@/src/lib/supabase';
+import { useAuth } from '../../hooks/useAuth';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
+import { MediaViewer } from '../../components/ui/MediaViewer';
+import { supabase } from '../../lib/supabase';
 import { Virtuoso } from 'react-virtuoso';
 
-import MediaCard from '@/src/components/MediaCard';
-import { MediaSkeleton } from '@/src/components/Skeletons';
+import MediaCard from '../../components/MediaCard';
+import { MediaSkeleton } from '../../components/Skeletons';
 
 export default function MediaFeed() {
   const queryClient = useQueryClient();

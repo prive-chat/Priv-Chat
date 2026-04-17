@@ -1,14 +1,14 @@
 import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
-import { supabase } from '@/src/lib/supabase';
-import { useAuth } from '@/src/hooks/useAuth';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/src/components/ui/Button';
-import { Input } from '@/src/components/ui/Input';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/src/components/ui/Card';
-import { motion, AnimatePresence } from 'motion/react';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/Card';
+import { motion, AnimatePresence } from 'framer-motion';
 import { User, Camera, Check, AlertCircle, ShieldCheck, Mail, Calendar, Bell, BellOff, Trash2 } from 'lucide-react';
-import { usePushNotifications } from '@/src/hooks/usePushNotifications';
-import { profileService } from '@/src/services/profileService';
+import { usePushNotifications } from '../hooks/usePushNotifications';
+import { profileService } from '../services/profileService';
 
 export default function SettingsPage() {
   const { user, profile, refreshProfile, signOut } = useAuth();

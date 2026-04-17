@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useUIStore } from '@/src/store/uiStore';
 import { X } from 'lucide-react';
 
