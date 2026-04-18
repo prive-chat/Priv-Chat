@@ -1,29 +1,29 @@
-const CACHE_NAME = 'prive-chat-v6';
-const IMAGE_CACHE_NAME = 'prive-chat-images-v6';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'prive-chat-prod-v1';
+const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon.png',
-  '/icon.svg?v=6'
+  '/icon.svg'
 ];
 
+// Install: Cache critical assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return Promise.allSettled(
-        ASSETS_TO_CACHE.map(asset => cache.add(asset))
-      );
+      return cache.addAll(STATIC_ASSETS);
     }).then(() => self.skipWaiting())
   );
 });
 
+// Activate: Clear ALL old caches to ensure zero garbage
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME && cacheName !== IMAGE_CACHE_NAME) {
+          // Si no es el caché actual, BORRAR SIN MISERICORDIA
+          if (cacheName !== CACHE_NAME) {
             return caches.delete(cacheName);
           }
         })
@@ -32,15 +32,18 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Fetch Strategy
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
+  // No interceptar peticiones externas (Supabase, etc) o que no sean GET
   if (event.request.method !== 'GET' || 
-      url.hostname.includes('supabase.co') || 
-      !url.origin.includes(self.location.origin)) {
+      !url.origin.includes(self.location.origin) ||
+      url.hostname.includes('supabase.co')) {
     return;
   }
 
+  // Navegación: Network-first con fallback a index.html
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -49,89 +52,67 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname === '/manifest.json' || url.pathname === '/sw.js') {
+  // Imágenes de marca: Cache-first
+  if (url.pathname === '/icon.png' || url.pathname === '/icon.svg') {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  if (url.pathname.includes('icon.png') || url.pathname.includes('icon.svg')) {
-    event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) return cachedResponse;
-        
-        return fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.ok) {
-            const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+      caches.match(event.request).then((cached) => {
+        return cached || fetch(event.request).then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
           }
-          return networkResponse;
-        }).catch(() => {
-          return caches.match('/icon.png') || caches.match('/icon.svg?v=6');
+          return response;
         });
       })
     );
     return;
   }
 
+  // Estática (JS/CSS): Stale-while-revalidate
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.ok) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+    caches.match(event.request).then((cached) => {
+      const networkFetch = fetch(event.request).then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
         }
-        return networkResponse;
-      }).catch(() => cachedResponse);
-      return cachedResponse || fetchPromise;
+        return response;
+      }).catch(() => cached);
+
+      return cached || networkFetch;
     })
   );
 });
 
+// Push Notifications
 self.addEventListener('push', (event) => {
   let data = { title: 'Privé Chat', body: 'Nueva notificación recibida' };
   try {
-    if (event.data) {
-      data = event.data.json();
-    }
-  } catch (e) {
-    console.error('Error parsing push data:', e);
-  }
+    if (event.data) data = event.data.json();
+  } catch (e) {}
 
   const options = {
     body: data.body,
     icon: '/icon.png',
-    badge: '/icon.svg?v=6',
-    data: {
-      url: data.url || '/'
-    },
+    badge: '/icon.svg',
+    data: { url: data.url || '/' },
     vibrate: [100, 50, 100],
-    actions: [
-      { action: 'open', title: 'Ver' }
-    ]
+    actions: [{ action: 'open', title: 'Ver' }]
   };
 
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
+// Notification Click
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const urlToOpen = event.notification.data.url;
-
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((windowClients) => {
-      for (let i = 0; i < windowClients.length; i++) {
-        const client = windowClients[i];
-        if (client.url === urlToOpen && 'focus' in client) {
-          return client.focus();
-        }
+    clients.matchAll({ type: 'window' }).then((clientsList) => {
+      const url = event.notification.data.url;
+      for (const client of clientsList) {
+        if (client.url === url && 'focus' in client) return client.focus();
       }
-      if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
-      }
+      if (clients.openWindow) return clients.openWindow(url);
     })
   );
 });

@@ -1,16 +1,14 @@
 {
-  "name": "Privé Chat",
   "short_name": "Privé Chat",
-  "id": "/?source=pwa",
-  "description": "Gestión de Medios y Mensajería Segura de Grado Empresarial",
-  "start_url": "/?source=pwa",
+  "name": "Privé Chat | Red Social de Medios",
+  "description": "Gestión de medios y mensajería segura.",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#050505",
-  "theme_color": "#E60000",
-  "orientation": "portrait",
+  "theme_color": "#050505",
   "icons": [
     {
-      "src": "/icon.svg?v=6",
+      "src": "/icon.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
