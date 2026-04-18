@@ -4,7 +4,7 @@ const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/logo_real.jpg'
+  '/brand_prive_final.jpg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -62,7 +62,7 @@ self.addEventListener('fetch', (event) => {
   // Network-first for HTML, manifest and icons to ensure updates are seen
   if (event.request.mode === 'navigate' || 
       url.pathname === '/manifest.json' || 
-      url.pathname === '/logo_real.jpg' ||
+      url.pathname === '/brand_prive_final.jpg' ||
       url.pathname === '/sw.js') {
     event.respondWith(
       fetch(event.request)
@@ -111,8 +111,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: '/logo_real.jpg',
-    badge: '/logo_real.jpg',
+    icon: '/brand_prive_final.jpg',
+    badge: '/brand_prive_final.jpg',
     data: {
       url: data.url || '/'
     },

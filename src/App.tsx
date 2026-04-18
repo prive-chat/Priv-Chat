@@ -34,7 +34,7 @@ const LoadingScreen = ({ message = "Cargando..." }) => (
         }}
         className="h-24 w-24 rounded-3xl bg-zinc-900 shadow-[0_0_50px_rgba(230,0,0,0.1)] border border-white/5 overflow-hidden ring-1 ring-passion-red/20"
       >
-        <img src="/logo_real.jpg" alt="Privé Chat Logo" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+        <img src="/brand_prive_final.jpg" alt="Privé Chat Logo" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
       </motion.div>
       <div className="flex flex-col items-center space-y-3">
         <div className="h-1 w-40 bg-white/5 rounded-full overflow-hidden border border-white/5">
