@@ -6,12 +6,36 @@ async function processLogo() {
   const inputPath = 'public/icon.png';
   
   if (!fs.existsSync(inputPath)) {
-    console.error(`Master logo not found at ${inputPath}`);
+    console.warn(`Master logo not found at ${inputPath}. Skipping asset generation.`);
     return;
   }
 
+  // --- AUTO-REPAIR PNG (IEND CHUNK) ---
+  // Some uploaded PNGs have extra trailing data that crashes standard parsers
+  try {
+    const buf = fs.readFileSync(inputPath);
+    if (buf.length > 8) {
+      const iend = buf.lastIndexOf(Buffer.from([0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]));
+      if (iend !== -1 && iend + 8 < buf.length) {
+        console.log('Detected trailing data in PNG. Repairing...');
+        fs.writeFileSync(inputPath, buf.slice(0, iend + 8));
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to repair PNG header, attempt load anyway.');
+  }
+  // ------------------------------------
+
   console.log('Processing master logo...');
-  const image = await Jimp.read(inputPath);
+  let image;
+  try {
+    image = await Jimp.read(inputPath);
+  } catch (err) {
+    console.error(`Jimp could not read the image: ${err.message}`);
+    console.warn('Proceeding without new asset generation.');
+    return;
+  }
+
   const { width, height } = image.bitmap;
 
   // 1. Clean background (Checkerboard removal)
