@@ -1,5 +1,5 @@
-const CACHE_NAME = 'prive-chat-v2';
-const IMAGE_CACHE_NAME = 'prive-chat-images-v2';
+const CACHE_NAME = 'prive-chat-v3';
+const IMAGE_CACHE_NAME = 'prive-chat-images-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

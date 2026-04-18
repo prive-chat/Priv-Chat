@@ -27,7 +27,7 @@ export default function NotificationManager() {
           if ('Notification' in window && Notification.permission === 'granted') {
             const n = new Notification(notification.title, {
               body: notification.content,
-              icon: '/brand_prive_final.jpg',
+              icon: '/brand_prive_final.jpg?v=3',
               tag: notification.id,
             });
 
