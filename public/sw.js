@@ -1,10 +1,11 @@
-const CACHE_NAME = 'prive-chat-v3';
-const IMAGE_CACHE_NAME = 'prive-chat-images-v3';
+const CACHE_NAME = 'prive-chat-v4';
+const IMAGE_CACHE_NAME = 'prive-chat-images-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/brand_prive_final.jpg'
+  '/brand_prive_final.jpg',
+  '/icon.svg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -63,6 +64,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate' || 
       url.pathname === '/manifest.json' || 
       url.pathname === '/brand_prive_final.jpg' ||
+      url.pathname === '/icon.svg' ||
       url.pathname === '/sw.js') {
     event.respondWith(
       fetch(event.request)
@@ -111,8 +113,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: '/brand_prive_final.jpg',
-    badge: '/brand_prive_final.jpg',
+    icon: '/icon.svg',
+    badge: '/icon.svg',
     data: {
       url: data.url || '/'
     },
