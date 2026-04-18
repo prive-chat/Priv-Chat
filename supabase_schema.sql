@@ -431,6 +431,7 @@ CREATE TABLE IF NOT EXISTS public.ads (
   status TEXT CHECK (status IN ('active', 'paused', 'scheduled')) DEFAULT 'active',
   impressions BIGINT DEFAULT 0,
   clicks BIGINT DEFAULT 0,
+  priority INTEGER DEFAULT 0,
   starts_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   ends_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
@@ -444,6 +445,9 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'ads' AND column_name = 'ends_at') THEN
     ALTER TABLE public.ads ADD COLUMN ends_at TIMESTAMP WITH TIME ZONE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'ads' AND column_name = 'priority') THEN
+    ALTER TABLE public.ads ADD COLUMN priority INTEGER DEFAULT 0;
   END IF;
 END $$;
 
