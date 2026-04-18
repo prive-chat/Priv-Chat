@@ -4,17 +4,19 @@ const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/brand_prive_final.jpg?v=5',
+  '/prive-logo-v5.jpg',
   '/icon.svg?v=5'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+      // Estrategia tolerante para el caché inicial
+      return Promise.allSettled(
+        ASSETS_TO_CACHE.map(asset => cache.add(asset))
+      );
+    }).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -27,70 +29,68 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  event.waitUntil(clients.claim());
 });
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Skip caching for non-GET requests or Supabase/API calls
-  // This prevents interference with Auth, DB updates, and RLS
-  if (event.request.method !== 'GET' || url.hostname.includes('supabase.co')) {
+  // No interceptar peticiones a Supabase, métodos no GET o archivos externos
+  if (event.request.method !== 'GET' || 
+      url.hostname.includes('supabase.co') || 
+      !url.origin.includes(self.location.origin)) {
     return;
   }
-  
-  // Stale-while-revalidate for images (safer than Cache-First)
-  if (event.request.destination === 'image' || url.pathname.includes('/storage/v1/object/public/')) {
+
+  // Estrategia de Red-Primero para navegación y archivos críticos
+  // Con fallback a index.html para navegación
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => caches.match('/index.html') || caches.match('/'))
+    );
+    return;
+  }
+
+  if (url.pathname === '/manifest.json' || url.pathname === '/sw.js') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Estrategia de Caché-Primero EXCLUSIVA para imágenes de marca
+  if (url.pathname.includes('prive-logo-v5.jpg') || url.pathname.includes('icon.svg')) {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
-        const fetchPromise = fetch(event.request).then((networkResponse) => {
+        if (cachedResponse) return cachedResponse;
+        
+        return fetch(event.request).then((networkResponse) => {
           if (networkResponse && networkResponse.ok) {
-            const responseToCache = networkResponse.clone();
-            caches.open(IMAGE_CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           }
           return networkResponse;
+        }).catch(() => {
+          return caches.match('/prive-logo-v5.jpg') || caches.match('/icon.svg?v=5');
         });
-        return cachedResponse || fetchPromise;
       })
     );
     return;
   }
 
-  // Network-first for HTML, manifest and icons to ensure updates are seen
-  if (event.request.mode === 'navigate' || 
-      url.pathname === '/manifest.json' || 
-      url.pathname === '/brand_prive_final.jpg' ||
-      url.pathname === '/icon.svg' ||
-      url.pathname === '/sw.js') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // Stale-while-revalidate for other assets
+  // Stale-while-revalidate para el resto (CSS, JS, etc)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
         if (networkResponse && networkResponse.ok) {
           const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
         }
         return networkResponse;
+      }).catch(() => {
+        return cachedResponse;
       });
       return cachedResponse || fetchPromise;
     })
@@ -98,29 +98,25 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  let data = { title: 'Nueva Notificación', body: 'Tienes un nuevo mensaje.' };
-  
+  let data = { title: 'Privé Chat', body: 'Nueva notificación recibida' };
   try {
     if (event.data) {
       data = event.data.json();
     }
   } catch (e) {
-    console.warn('Error parsing push data, using default:', e);
-    if (event.data) {
-      data.body = event.data.text();
-    }
+    console.error('Error parsing push data:', e);
   }
 
   const options = {
     body: data.body,
-    icon: '/icon.svg',
-    badge: '/icon.svg',
+    icon: '/prive-logo-v5.jpg',
+    badge: '/icon.svg?v=5',
     data: {
       url: data.url || '/'
     },
     vibrate: [100, 50, 100],
     actions: [
-      { action: 'open', title: 'Ver ahora' }
+      { action: 'open', title: 'Ver' }
     ]
   };
 
@@ -131,19 +127,16 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-
   const urlToOpen = event.notification.data.url;
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Check if there is already a window open with this URL
+    clients.matchAll({ type: 'window' }).then((windowClients) => {
       for (let i = 0; i < windowClients.length; i++) {
         const client = windowClients[i];
         if (client.url === urlToOpen && 'focus' in client) {
           return client.focus();
         }
       }
-      // If no window is open, open a new one
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }
