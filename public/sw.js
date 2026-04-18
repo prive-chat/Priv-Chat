@@ -2,9 +2,7 @@ const CACHE_NAME = 'prive-chat-prod-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json',
-  '/icon.png',
-  '/icon.svg'
+  '/manifest.json'
 ];
 
 // Install: Cache critical assets
@@ -52,23 +50,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Imágenes de marca: Cache-first
-  if (url.pathname === '/icon.png' || url.pathname === '/icon.svg') {
-    event.respondWith(
-      caches.match(event.request).then((cached) => {
-        return cached || fetch(event.request).then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-          }
-          return response;
-        });
-      })
-    );
-    return;
-  }
-
-  // Estática (JS/CSS): Stale-while-revalidate
+  // Pantalla de navegación y assets estáticos generales
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const networkFetch = fetch(event.request).then((response) => {
@@ -93,8 +75,6 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: '/icon.png',
-    badge: '/icon.svg',
     data: { url: data.url || '/' },
     vibrate: [100, 50, 100],
     actions: [{ action: 'open', title: 'Ver' }]
