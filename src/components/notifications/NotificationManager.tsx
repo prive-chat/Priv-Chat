@@ -27,6 +27,7 @@ export default function NotificationManager() {
           if ('Notification' in window && Notification.permission === 'granted') {
             const n = new Notification(notification.title, {
               body: notification.content,
+              icon: '/icon.svg',
               tag: notification.id,
             });
 

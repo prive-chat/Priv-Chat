@@ -169,6 +169,7 @@ export default function SettingsPage() {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('¡Prueba Exitosa!', {
         body: 'Así es como recibirás las notificaciones en Privé Chat.',
+        icon: '/icon.svg',
       });
     } else {
       setMessage({ type: 'error', text: 'Por favor, activa las notificaciones primero.' });

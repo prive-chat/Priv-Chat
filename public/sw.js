@@ -2,7 +2,9 @@ const CACHE_NAME = 'prive-chat-prod-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon.svg',
+  '/icon.png'
 ];
 
 // Install: Cache critical assets
