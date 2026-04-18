@@ -1,81 +1,89 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Gradientes de Material -->
-    <linearGradient id="goldBevel" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FFFACD" />
-      <stop offset="20%" stop-color="#FFD700" />
-      <stop offset="50%" stop-color="#B8860B" />
-      <stop offset="80%" stop-color="#FFD700" />
-      <stop offset="100%" stop-color="#8B4513" />
-    </linearGradient>
+    <!-- Filtros para realismo 3D -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feOffset dx="0" dy="10" result="offsetBlur" />
+      <feMerge>
+        <feMergeNode in="offsetBlur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    
+    <filter id="innerGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
 
-    <radialGradient id="rubyGlass" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
-      <stop offset="0%" stop-color="#FF4D4D" />
-      <stop offset="60%" stop-color="#990000" />
-      <stop offset="100%" stop-color="#4D0000" />
-    </radialGradient>
-
-    <radialGradient id="neonCore" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FF0000" />
-      <stop offset="100%" stop-color="#FF0000" stop-opacity="0" />
-    </radialGradient>
-
-    <!-- Filtros de realismo -->
-    <filter id="volumetric" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="3" result="blur" />
-      <feSpecularLighting surfaceScale="5" specularConstant="0.8" specularExponent="20" lighting-color="#white" in="blur" result="spec">
-        <fePointLight x="100" y="100" z="200" />
+    <filter id="specular" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feSpecularLighting surfaceScale="5" specularConstant="1" specularExponent="40" lighting-color="white" in="blur" result="spec">
+        <fePointLight x="100" y="50" z="300" />
       </feSpecularLighting>
       <feComposite in="SourceGraphic" in2="spec" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" />
     </filter>
 
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="15" result="blur" />
-      <feMerge>
-        <feMergeNode in="blur" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
+    <!-- Gradientes de Material -->
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFAE0" />
+      <stop offset="25%" stop-color="#D4AF37" />
+      <stop offset="50%" stop-color="#8B4513" />
+      <stop offset="75%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#5C3B0E" />
+    </linearGradient>
+
+    <radialGradient id="rubyGradient" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+      <stop offset="0%" stop-color="#FF3333" />
+      <stop offset="60%" stop-color="#8B0000" />
+      <stop offset="100%" stop-color="#2D0000" />
+    </radialGradient>
+
+    <radialGradient id="neonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF0000" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#FF0000" stop-opacity="0" />
+    </radialGradient>
   </defs>
 
-  <!-- Brillo de Neón Externo (Ambiental) -->
-  <circle cx="256" cy="256" r="220" fill="url(#neonCore)" opacity="0.3" filter="blur(30px)" />
+  <!-- Brillo de Neón (Ambiental) -->
+  <circle cx="256" cy="256" r="230" fill="url(#neonGlow)" opacity="0.4" />
 
-  <!-- Escudo Base (Facetado) -->
-  <g filter="url(#volumetric)">
-    <!-- Marco de Oro del Escudo -->
-    <path d="M120 120 C120 70, 200 50, 256 70 C312 50, 392 70, 392 120 V280 C392 380, 256 440, 256 440 L120 280 V120Z" fill="url(#goldBevel)" />
-    <!-- Cuerpo de Cristal Principal -->
-    <path d="M135 130 C135 90, 205 75, 256 90 C307 75, 377 90, 377 130 V270 C377 350, 256 415, 256 415 L135 270 V130Z" fill="url(#rubyGlass)" stroke="#000" stroke-width="0.5" />
+  <!-- Estructura del Escudo -->
+  <g filter="url(#shadow)">
+    <!-- Borde de Oro del Escudo -->
+    <path d="M110 130 C110 80, 200 60, 256 80 C312 60, 402 80, 402 130 V290 C402 390, 256 450, 256 450 L110 290 V130Z" fill="url(#goldGradient)" filter="url(#specular)" />
     
-    <!-- Facetas Internas del Cristal -->
-    <path d="M256 90 L377 130 L256 256 L135 130 Z" fill="white" fill-opacity="0.05" />
-    <path d="M135 130 L135 270 L256 256 Z" fill="black" fill-opacity="0.15" />
-    <path d="M377 130 L377 270 L256 256 Z" fill="white" fill-opacity="0.1" />
-    <path d="M135 270 L256 415 L256 256 Z" fill="black" fill-opacity="0.2" />
-    <path d="M377 270 L256 415 L256 256 Z" fill="white" fill-opacity="0.05" />
+    <!-- Cristal Rubí Interno -->
+    <path d="M125 140 C125 100, 200 80, 256 100 C312 80, 387 100, 387 140 V280 C387 370, 256 430, 256 430 L125 280 V140Z" fill="url(#rubyGradient)" opacity="0.95" />
+    
+    <!-- Facetas (Simulación de cristal) -->
+    <path d="M256 100 L387 140 L256 260 Z" fill="white" fill-opacity="0.1" />
+    <path d="M125 140 L256 100 L256 260 Z" fill="white" fill-opacity="0.05" />
+    <path d="M125 140 L125 280 L256 260 Z" fill="black" fill-opacity="0.2" />
+    <path d="M387 140 L387 280 L256 260 Z" fill="black" fill-opacity="0.1" />
   </g>
 
-  <!-- Letra 'P' Volumétrica (Neón) -->
-  <g filter="url(#glow)">
-    <!-- Bordes de Oro de la 'P' -->
-    <path d="M246 140 H310 C345 140, 345 230, 310 230 H246 V340" stroke="url(#goldBevel)" stroke-width="14" stroke-linecap="round" fill="none" />
+  <!-- La 'P' de Neón con marco dorado -->
+  <g transform="translate(10, 0)">
+    <!-- Contorno Dorado de la P -->
+    <path d="M260 150 H330 C370 150, 370 240, 330 240 H260 V360" stroke="url(#goldGradient)" stroke-width="16" stroke-linecap="round" fill="none" filter="url(#specular)" />
     <!-- Núcleo de Neón Rojo -->
-    <path d="M246 140 H310 C345 140, 345 230, 310 230 H246 V340" stroke="#FF3131" stroke-width="4" stroke-linecap="round" fill="none" />
+    <path d="M260 150 H330 C370 150, 370 240, 330 240 H260 V360" stroke="#FF4D4D" stroke-width="5" stroke-linecap="round" fill="none" filter="url(#innerGlow)" />
   </g>
 
-  <!-- El Candado Integrado (Foco central) -->
-  <g transform="translate(230, 240)" filter="url(#volumetric)">
+  <!-- El Candado (Elemento central) -->
+  <g transform="translate(225, 230)" filter="url(#shadow)">
     <!-- Arco de Oro -->
-    <path d="M10 15 V0 C10 -15, 42 -15, 42 0 V15" fill="none" stroke="url(#goldBevel)" stroke-width="8" stroke-linecap="round" />
-    <!-- Cuerpo de Cristal Rubí -->
-    <rect x="0" y="10" width="52" height="60" rx="6" fill="url(#rubyGlass)" stroke="url(#goldBevel)" stroke-width="4" />
-    <!-- Ojo de Cerradura Dorado -->
-    <circle cx="26" cy="40" r="6" fill="#000" />
-    <path d="M26 44 L26 55 L32 55 L20 55 L26 44Z" fill="url(#goldBevel)" />
+    <path d="M12 20 V5 C12 -15, 50 -15, 50 5 V20" fill="none" stroke="url(#goldGradient)" stroke-width="10" stroke-linecap="round" filter="url(#specular)" />
+    <!-- Cuerpo del Candado (Ruby + Oro) -->
+    <rect x="0" y="15" width="62" height="70" rx="8" fill="url(#rubyGradient)" stroke="url(#goldGradient)" stroke-width="5" />
+    <!-- Keyhole -->
+    <g transform="translate(31, 50)">
+      <circle r="7" fill="#1A0000" stroke="#D4AF37" stroke-width="1" />
+      <path d="M-3 6 L3 6 L0 -2 Z" fill="#D4AF37" transform="rotate(180)" />
+    </g>
   </g>
 
-  <!-- Reflejos de Brillo Final -->
-  <path d="M150 140 Q180 120, 220 140" fill="none" stroke="white" stroke-width="3" stroke-opacity="0.4" stroke-linecap="round" />
-  <path d="M320 150 Q340 145, 360 160" fill="none" stroke="white" stroke-width="4" stroke-opacity="0.5" stroke-linecap="round" />
+  <!-- Reflejos de Luz Superior -->
+  <path d="M140 150 Q180 130, 230 150" fill="none" stroke="white" stroke-width="4" stroke-opacity="0.3" stroke-linecap="round" />
+  <path d="M300 160 Q340 150, 380 170" fill="none" stroke="white" stroke-width="5" stroke-opacity="0.4" stroke-linecap="round" />
 </svg>
