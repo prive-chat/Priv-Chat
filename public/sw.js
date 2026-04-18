@@ -1,17 +1,16 @@
-const CACHE_NAME = 'prive-chat-v5';
-const IMAGE_CACHE_NAME = 'prive-chat-images-v5';
+const CACHE_NAME = 'prive-chat-v6';
+const IMAGE_CACHE_NAME = 'prive-chat-images-v6';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/prive-logo-v5.jpg',
-  '/icon.svg?v=5'
+  '/icon.png',
+  '/icon.svg?v=6'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Estrategia tolerante para el caché inicial
       return Promise.allSettled(
         ASSETS_TO_CACHE.map(asset => cache.add(asset))
       );
@@ -36,15 +35,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // No interceptar peticiones a Supabase, métodos no GET o archivos externos
   if (event.request.method !== 'GET' || 
       url.hostname.includes('supabase.co') || 
       !url.origin.includes(self.location.origin)) {
     return;
   }
 
-  // Estrategia de Red-Primero para navegación y archivos críticos
-  // Con fallback a index.html para navegación
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -60,8 +56,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Estrategia de Caché-Primero EXCLUSIVA para imágenes de marca
-  if (url.pathname.includes('prive-logo-v5.jpg') || url.pathname.includes('icon.svg')) {
+  if (url.pathname.includes('icon.png') || url.pathname.includes('icon.svg')) {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         if (cachedResponse) return cachedResponse;
@@ -73,14 +68,13 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         }).catch(() => {
-          return caches.match('/prive-logo-v5.jpg') || caches.match('/icon.svg?v=5');
+          return caches.match('/icon.png') || caches.match('/icon.svg?v=6');
         });
       })
     );
     return;
   }
 
-  // Stale-while-revalidate para el resto (CSS, JS, etc)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
@@ -89,9 +83,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
         }
         return networkResponse;
-      }).catch(() => {
-        return cachedResponse;
-      });
+      }).catch(() => cachedResponse);
       return cachedResponse || fetchPromise;
     })
   );
@@ -109,8 +101,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: '/prive-logo-v5.jpg',
-    badge: '/icon.svg?v=5',
+    icon: '/icon.png',
+    badge: '/icon.svg?v=6',
     data: {
       url: data.url || '/'
     },
