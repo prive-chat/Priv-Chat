@@ -1,11 +1,11 @@
-const CACHE_NAME = 'prive-chat-v4';
-const IMAGE_CACHE_NAME = 'prive-chat-images-v4';
+const CACHE_NAME = 'prive-chat-v5';
+const IMAGE_CACHE_NAME = 'prive-chat-images-v5';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/brand_prive_final.jpg',
-  '/icon.svg'
+  '/brand_prive_final.jpg?v=5',
+  '/icon.svg?v=5'
 ];
 
 self.addEventListener('install', (event) => {

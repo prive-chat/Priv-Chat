@@ -10,13 +10,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/icon.svg?v=5",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "/brand_prive_final.jpg",
+      "src": "/brand_prive_final.jpg?v=5",
       "sizes": "512x512",
       "type": "image/jpeg",
       "purpose": "any"

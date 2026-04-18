@@ -54,7 +54,7 @@ export function InstallPrompt() {
           <div className="glass-card p-4 flex items-center justify-between gap-4 shadow-2xl border-primary-600/20">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center shadow-lg shadow-passion-red/20 overflow-hidden neon-glow">
-                <img src="/brand_prive_final.jpg?v=4" alt="Logo" className="h-full w-full object-cover" />
+                <img src="/brand_prive_final.jpg?v=5" alt="Logo" className="h-full w-full object-cover" />
               </div>
               <div>
                 <h3 className="text-sm font-black text-white italic uppercase tracking-tighter">Instalar Privé Chat</h3>
