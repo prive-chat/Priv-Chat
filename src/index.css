@@ -41,8 +41,13 @@
     @apply bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 transition-all duration-300;
   }
 
-  .neon-glow {
-    @apply shadow-[0_0_15px_rgba(230,0,0,0.3)];
+  .ruby-glow {
+    @apply shadow-[0_0_40px_rgba(255,23,68,0.4)];
+    filter: drop-shadow(0 0 10px rgba(255,23,68,0.6));
+  }
+
+  .gold-border {
+    @apply border border-gold-500/30 ring-1 ring-gold-500/20 shadow-[inset_0_0_20px_rgba(212,175,55,0.1)];
   }
 
   .passion-text {

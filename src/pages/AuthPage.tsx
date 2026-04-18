@@ -105,8 +105,8 @@ export default function AuthPage() {
       >
         <Card className="bg-zinc-900/80 border border-white/5 shadow-2xl overflow-hidden backdrop-blur-xl">
           <CardHeader className="pb-2">
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-zinc-900 border border-white/10 shadow-lg overflow-hidden p-2">
-              <img src="/icon.svg" onError={(e) => (e.currentTarget.src = '/icon.png')} alt="Privé Chat Logo" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+            <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-zinc-950/80 gold-border ruby-glow overflow-hidden p-3 shadow-2xl">
+              <img src="/icon.png" onError={(e) => (e.currentTarget.src = '/icon.svg')} alt="Privé Chat Logo" className="h-full w-full object-contain scale-110" referrerPolicy="no-referrer" />
             </div>
             <CardTitle className="text-center text-3xl font-black tracking-tighter passion-text uppercase">
               {isLogin ? 'Privé Chat' : 'Crear Cuenta'}

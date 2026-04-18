@@ -25,16 +25,15 @@ const LoadingScreen = ({ message = "Cargando..." }) => (
       <motion.div
         animate={{ 
           scale: [1, 1.05, 1],
-          opacity: [0.9, 1, 0.9]
         }}
         transition={{ 
-          duration: 3,
+          duration: 4,
           repeat: Infinity,
           ease: "easeInOut"
         }}
-        className="h-24 w-24 rounded-3xl bg-zinc-900 shadow-[0_0_50px_rgba(230,0,0,0.1)] border border-white/5 overflow-hidden ring-1 ring-passion-red/20"
+        className="h-32 w-32 rounded-[2.5rem] bg-zinc-950/80 ruby-glow gold-border p-4 overflow-hidden"
       >
-        <img src="/icon.svg" onError={(e) => (e.currentTarget.src = '/icon.png')} alt="Privé Chat Logo" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+        <img src="/icon.png" onError={(e) => (e.currentTarget.src = '/icon.svg')} alt="Privé Chat Logo" className="h-full w-full object-contain scale-110" referrerPolicy="no-referrer" />
       </motion.div>
       <div className="flex flex-col items-center space-y-3">
         <div className="h-1 w-40 bg-white/5 rounded-full overflow-hidden border border-white/5">
