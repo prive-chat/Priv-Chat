@@ -19,22 +19,12 @@ import PostPage from './pages/PostPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AdminPage from './pages/AdminPage';
 
+import { Logo } from './components/ui/Logo';
+
 const LoadingScreen = ({ message = "Cargando..." }) => (
   <div className="flex min-h-screen items-center justify-center bg-black">
     <div className="flex flex-col items-center space-y-6">
-      <motion.div
-        animate={{ 
-          scale: [1, 1.05, 1],
-        }}
-        transition={{ 
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-        className="h-32 w-32 rounded-[2.5rem] bg-zinc-950/80 ruby-glow gold-border p-4 overflow-hidden"
-      >
-        <img src="/icon.png" onError={(e) => (e.currentTarget.src = '/icon.svg')} alt="Privé Chat Logo" className="h-full w-full object-contain scale-110" referrerPolicy="no-referrer" />
-      </motion.div>
+      <Logo size={140} className="scale-110" />
       <div className="flex flex-col items-center space-y-3">
         <div className="h-1 w-40 bg-white/5 rounded-full overflow-hidden border border-white/5">
           <motion.div 

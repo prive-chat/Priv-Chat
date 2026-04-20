@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 import NotificationDropdown from '../notifications/NotificationDropdown';
 
+import { Logo } from '../ui/Logo';
+
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -65,9 +67,7 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-black/60 backdrop-blur-2xl">
       <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link to="/" onClick={handleHomeClick} className="flex items-center space-x-2 group shrink-0">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-950/80 gold-border transition-transform overflow-hidden ruby-glow p-1.5">
-            <img src="/icon.png" onError={(e) => (e.currentTarget.src = '/icon.svg')} alt="Privé Chat Logo" className="h-full w-full object-contain scale-110" referrerPolicy="no-referrer" />
-          </div>
+          <Logo size={40} glow={false} />
           <span className="text-lg sm:text-xl font-black tracking-tighter passion-text drop-shadow-sm truncate max-w-[120px] sm:max-w-none font-display italic">PRIVÉ CHAT</span>
         </Link>
 
