@@ -1,84 +1,84 @@
-# 🍷 Privé Chat
+# 🛡️ Privé Chat: Enclave Digital de Élite
 
-![Privé Chat Banner](https://picsum.photos/seed/privechat/1200/400?blur=2)
+![Privé Chat Refined](https://ais-pre-3snsuzqcwfrclflwlp2kcq-328810327831.us-east1.run.app/favicon-32.png) 
 
-**Privé Chat** es una plataforma modular y escalable de grado empresarial diseñada para la gestión de medios y mensajería segura. Construida con un enfoque en la privacidad, el rendimiento y una experiencia de usuario inmersiva.
+**Privé Chat** es una plataforma de mensajería de grado empresarial orientada a la exclusividad, la privacidad total y una experiencia de usuario inmersiva bajo el concepto de **"Enclave Privé"**. Diseñado para usuarios que exigen hermetismo, elegancia y un rendimiento impecable.
 
-## ✨ Características
+## 🔗 Enlaces Rápidos
+- 📱 [Demo en Vivo](https://ais-pre-3snsuzqcwfrclflwlp2kcq-328810327831.us-east1.run.app)
+- 🧪 [Repositorio GitHub](https://github.com/nexonetworkec-arch/prive-chat.git)
 
-- 🛡️ **Seguridad de Grado Empresarial:** Integración robusta con Supabase para autenticación y base de datos.
-- 📱 **Mensajería en Tiempo Real:** Chat fluido con soporte para medios y confirmaciones de lectura.
-- 🖼️ **Gestión de Medios:** Feed dinámico con carga y visualización optimizada.
-- 🔔 **Notificaciones Push:** Mantente al día con notificaciones nativas del navegador (Web Push API).
-- 🎨 **Diseño Glassmorphism:** Interfaz moderna, oscura y elegante inspirada en la estética de lujo.
-- ⚡ **Rendimiento:** Carga diferida (lazy loading), optimización de imágenes y consultas con TanStack Query.
-- 👤 **Perfiles de Usuario:** Gestión de perfiles, seguidores y verificación de cuentas.
+## ✨ Características de Élite
 
-## 🚀 Tecnologías
+### 💎 Experiencia Visual "Enclave"
+- **Branding Refinado:** Nueva identidad visual basada en el **Escudo de Cifrado PC**, proyectando autoridad y exclusividad.
+- **Glassmorphism Dinámico:** Interfaz oscura con efectos de desenfoque de fondo y resplandores ambientales en **Rojo Pasión (#C62828)**.
+- **Animaciones Motion:** Transiciones fluidas y micro-interacciones que refuerzan la sensación de lujo tecnológico.
 
-- **Frontend:** [React 19](https://react.dev/), [Vite](https://vitejs.dev/), [TypeScript](https://www.typescriptlang.org/).
-- **Estilos:** [Tailwind CSS 4](https://tailwindcss.com/).
-- **Backend:** [Supabase](https://supabase.com/) (Auth, Database, Storage, Realtime).
-- **Estado:** [Zustand](https://docs.pmnd.rs/zustand/) & [TanStack Query](https://tanstack.com/query/latest).
-- **Animaciones:** [Motion](https://motion.dev/).
-- **Iconos:** [Lucide React](https://lucide.dev/).
+### 🛡️ Seguridad y Privacidad
+- **Cifrado en Reposo:** Integración robusta con las políticas de seguridad (RLS) de Supabase.
+- **Hermetismo Personal:** Mensajería en tiempo real con borrado seguro y gestión de visibilidad de chats.
+- **Acceso Exclusivo:** Portal de autenticación blindado con validación de identidad.
 
-## 🛠️ Instalación
+### ⚡ Rendimiento de Vanguardia
+- **React 19 & Vite:** El stack más moderno para una respuesta instantánea.
+- **TanStack Query v5:** Gestión inteligente de caché y sincronización de datos.
+- **Optimización de Medios:** Carga diferida y compresión dinámica de imágenes para un feed ágil.
 
-### Requisitos Previos
+## 🛠️ Stack Tecnológico
 
-- Node.js 20 o superior.
-- Una cuenta en [Supabase](https://supabase.com/).
+- **Core:** React 19, TypeScript, Vite.
+- **Estado Global:** Zustand & TanStack Query.
+- **Backend as a Service:** Supabase (Auth, Realtime, Database, Storage).
+- **Estilos:** Tailwind CSS 4.
+- **Animaciones:** Motion / React.
+- **Notificaciones:** Web Push API & Service Workers.
 
-### Pasos
+## 🚀 Instalación para Desarrolladores
 
-1. **Clonar el repositorio:**
+### Requisitos
+- Node.js 20+
+- PNPM / NPM
+
+### Configuración Local
+
+1. **Clonar y Acceder:**
    ```bash
    git clone https://github.com/nexonetworkec-arch/prive-chat.git
    cd prive-chat
    ```
 
-2. **Instalar dependencias:**
+2. **Instalación:**
    ```bash
    npm install
    ```
 
-3. **Configurar variables de entorno:**
-   Copia el archivo `.env.example` a `.env` y completa tus credenciales de Supabase:
+3. **Variables de Entorno:**
+   Crea un archivo `.env` basado en `.env.example`:
    ```bash
    cp .env.example .env
    ```
-   *Nota: Necesitarás `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` de tu proyecto Supabase.*
+   Configura tus credenciales de **Supabase** y tu **VAPID Key**.
 
-4. **Configurar la base de datos:**
-   - Ve al SQL Editor de tu proyecto en Supabase.
-   - Copia y ejecuta el contenido del archivo `supabase_schema.sql`.
-   - Asegúrate de habilitar el **Storage** creando un bucket público llamado `media`.
-
-5. **Iniciar en desarrollo:**
+4. **Desarrollo:**
    ```bash
    npm run dev
    ```
 
-## 📦 Despliegue
+## 🏗️ Despliegue en Producción
 
-Para generar la versión de producción:
+El proyecto está optimizado para despliegues en contenedores o hosting estático:
+
 ```bash
 npm run build
 ```
-El contenido de la carpeta `dist` está listo para ser servido en cualquier hosting estático (Vercel, Netlify, GitHub Pages).
 
-## 🛡️ Seguridad
-
-Para reportar vulnerabilidades, consulta nuestra [Política de Seguridad](SECURITY.md).
-
-## 🤝 Contribuir
-
-¡Las contribuciones son bienvenidas! Consulta [CONTRIBUTING.md](CONTRIBUTING.md) para empezar.
+El contenido de `/dist` es estático y de alto rendimiento.
 
 ## 📄 Licencia
 
-Distribuido bajo la Licencia MIT. Consulta [LICENSE](LICENSE) para más información.
+Este proyecto está bajo la Licencia **MIT**. Consulta el archivo `LICENSE` para más detalles.
 
 ---
-Desarrollado con ❤️ por el equipo de Privé Chat.
+🛡️ *Seguridad. Elegancia. Exclusividad.*  
+**Privé Chat - El Enclave de la Comunicación Privada.**
