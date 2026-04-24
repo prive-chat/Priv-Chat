@@ -230,13 +230,10 @@ export const messageService = {
 
   async markAsDelivered(userId: string, senderId: string) {
     try {
-      const { error } = await supabase
-        .from('messages')
-        .update({ 
-          is_delivered: true,
-          delivered_at: new Date().toISOString()
-        })
-        .match({ receiver_id: userId, sender_id: senderId, is_delivered: false });
+      const { error } = await supabase.rpc('mark_messages_delivered', { 
+        p_user_id: userId, 
+        p_sender_id: senderId 
+      });
 
       if (error && error.code !== '42703' && error.code !== 'PGRST204') {
         throw error;

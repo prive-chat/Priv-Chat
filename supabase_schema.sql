@@ -100,14 +100,27 @@ CREATE TABLE IF NOT EXISTS public.messages (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Asegurar columnas de rastreo de mensajes (Migración)
+-- Asegurar todas las columnas necesarias (MIGRACIÓN INTEGRAL)
 DO $$ 
 BEGIN 
+  -- Columnas de Mensajes
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'is_delivered') THEN
+    ALTER TABLE public.messages ADD COLUMN is_delivered BOOLEAN DEFAULT FALSE;
+  END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'delivered_at') THEN
     ALTER TABLE public.messages ADD COLUMN delivered_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'is_read') THEN
+    ALTER TABLE public.messages ADD COLUMN is_read BOOLEAN DEFAULT FALSE;
+  END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'read_at') THEN
     ALTER TABLE public.messages ADD COLUMN read_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'deleted_by_sender') THEN
+    ALTER TABLE public.messages ADD COLUMN deleted_by_sender BOOLEAN DEFAULT FALSE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'deleted_by_receiver') THEN
+    ALTER TABLE public.messages ADD COLUMN deleted_by_receiver BOOLEAN DEFAULT FALSE;
   END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'media_type') THEN
     ALTER TABLE public.messages ADD COLUMN media_type TEXT;
@@ -117,6 +130,14 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'reactions') THEN
     ALTER TABLE public.messages ADD COLUMN reactions JSONB DEFAULT '{}'::jsonb;
+  END IF;
+
+  -- Columnas de Perfiles
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'bio') THEN
+    ALTER TABLE public.profiles ADD COLUMN bio TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'is_verified') THEN
+    ALTER TABLE public.profiles ADD COLUMN is_verified BOOLEAN DEFAULT FALSE;
   END IF;
 END $$;
 
@@ -637,6 +658,19 @@ BEGIN
     WHERE receiver_id = p_user_id 
       AND sender_id = p_sender_id 
       AND is_read = FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Función para marcar mensajes como entregados
+CREATE OR REPLACE FUNCTION public.mark_messages_delivered(p_user_id UUID, p_sender_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE public.messages 
+    SET is_delivered = TRUE, 
+        delivered_at = COALESCE(delivered_at, NOW())
+    WHERE receiver_id = p_user_id 
+      AND sender_id = p_sender_id 
+      AND is_delivered = FALSE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 

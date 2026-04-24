@@ -34,13 +34,13 @@ export interface Message {
   media_url?: string | null;
   media_type?: 'image' | 'video' | null;
   ref_post_id?: string | null;
+  reactions?: Record<string, string>;
   is_read: boolean;
   read_at?: string;
   is_delivered?: boolean;
   delivered_at?: string;
   deleted_by_sender?: boolean;
   deleted_by_receiver?: boolean;
-  reactions?: Record<string, string[]>;
   created_at: string;
   sender?: UserProfile;
 }
