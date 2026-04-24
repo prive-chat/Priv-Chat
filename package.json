@@ -9,7 +9,7 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev": "tsx server.ts",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
@@ -38,6 +38,7 @@
     "react-virtuoso": "^4.18.4",
     "recharts": "^3.8.1",
     "tailwind-merge": "^3.5.0",
+    "web-push": "^3.6.7",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },

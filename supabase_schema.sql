@@ -141,6 +141,22 @@ BEGIN
   END IF;
 END $$;
 
+-- 24. TABLA DE SUSCRIPCIONES PUSH
+CREATE TABLE IF NOT EXISTS public.push_subscriptions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  endpoint TEXT UNIQUE NOT NULL,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Usuarios gestionan sus suscripciones push" ON public.push_subscriptions;
+CREATE POLICY "Usuarios gestionan sus suscripciones push" ON public.push_subscriptions 
+FOR ALL USING (auth.uid() = user_id);
+
 -- 6. TABLA DE NOTIFICACIONES
 CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -674,7 +690,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- 21. BROADCAST GLOBAL (ESCALABILIDAD EMPRESARIAL)
+
+-- 25. CONFIGURACIÓN DE WEBHOOKS PARA NOTIFICACIONES PUSH
+-- Habilitar extensión para peticiones HTTP
+CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
+
+-- Función para mensajes
+CREATE OR REPLACE FUNCTION public.handle_new_message_push()
+RETURNS TRIGGER AS $$
+BEGIN
+  PERFORM
+    net.http_post(
+      url := 'https://ais-dev-3snsuzqcwfrclflwlp2kcq-328810327831.us-east1.run.app/api/send-push',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json'
+      ),
+      body := jsonb_build_object('record', row_to_json(NEW))
+    );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_message_created_push ON public.messages;
+CREATE TRIGGER on_message_created_push
+  AFTER INSERT ON public.messages
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_message_push();
+
 -- Procesa el envío de notificaciones en el servidor para evitar colapsar el cliente
 CREATE OR REPLACE FUNCTION public.broadcast_global_message(
   p_title TEXT,
