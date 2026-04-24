@@ -2,20 +2,91 @@ import { useState, useEffect, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { Ad } from '@/src/types';
 import { publicAdService } from '@/src/services/publicAdService';
-import { ExternalLink, Megaphone, X, Maximize2 } from 'lucide-react';
+import { ExternalLink, Megaphone, X, Maximize2, Share2, Flame, Laugh, Heart, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 import { Button } from './Button';
+import { useAuth } from '@/src/hooks/useAuth';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface AdCardProps {
   ad: Ad;
 }
 
+const REACTIONS = [
+  { type: 'heart', icon: Heart, color: 'text-red-500', fill: 'fill-red-500' },
+  { type: 'fire', icon: Flame, color: 'text-orange-500', fill: 'fill-orange-500' },
+  { type: 'laugh', icon: Laugh, color: 'text-yellow-500', fill: 'fill-yellow-500' },
+];
+
 export const AdCard = memo(({ ad }: AdCardProps) => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+
+  const reactionMutation = useMutation({
+    mutationFn: ({ reactionType, isLiked }: { reactionType: string; isLiked: boolean }) => {
+      if (isLiked && ad.reaction_type === reactionType) {
+        return publicAdService.unlikeAd(user!.id, ad.id);
+      }
+      return publicAdService.toggleReaction(user!.id, ad.id, reactionType);
+    },
+    onMutate: async ({ reactionType }) => {
+      await queryClient.cancelQueries({ queryKey: ['ads'] });
+      const previousAds = queryClient.getQueryData(['ads']);
+
+      queryClient.setQueryData(['ads'], (old: any) => {
+        if (!old) return old;
+        return old.map((item: Ad) => {
+          if (item.id !== ad.id) return item;
+          
+          const isSameReaction = item.is_liked && item.reaction_type === reactionType;
+          let newLikesCount = item.likes_count || 0;
+          
+          if (isSameReaction) {
+            newLikesCount = Math.max(0, newLikesCount - 1);
+          } else if (!item.is_liked) {
+            newLikesCount += 1;
+          }
+
+          return {
+            ...item,
+            is_liked: !isSameReaction,
+            reaction_type: isSameReaction ? null : reactionType,
+            likes_count: newLikesCount
+          };
+        });
+      });
+
+      return { previousAds };
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['ads'], context?.previousAds);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['ads'] });
+    }
+  });
+
+  const shareMutation = useMutation({
+    mutationFn: async () => {
+      if (ad.link_url) {
+        await publicAdService.shareAd(ad.id);
+        await navigator.clipboard.writeText(ad.link_url);
+      }
+    },
+    onMutate: () => {
+      setIsSharing(true);
+      setTimeout(() => setIsSharing(false), 2000);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['ads'] });
+    }
+  });
 
   useEffect(() => {
-    // Track impression when component mounts
     publicAdService.trackImpression(ad.id);
   }, [ad.id]);
 
@@ -33,8 +104,6 @@ export const AdCard = memo(({ ad }: AdCardProps) => {
   const handleLinkClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!ad.link_url) return;
-    
-    // Track click and wait to ensure it's registered
     await publicAdService.trackClick(ad.id);
     window.open(ad.link_url, '_blank', 'noopener,noreferrer');
   };
@@ -42,6 +111,9 @@ export const AdCard = memo(({ ad }: AdCardProps) => {
   const handleCardClick = () => {
     setIsFullscreen(true);
   };
+
+  const currentReaction = REACTIONS.find(r => r.type === ad.reaction_type) || REACTIONS[0];
+  const ReactionIcon = currentReaction.icon;
 
   const hasLink = !!ad.link_url;
 
@@ -58,7 +130,7 @@ export const AdCard = memo(({ ad }: AdCardProps) => {
         onClick={handleCardClick}
       >
         {/* Ad Badge */}
-        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 shadow-xl">
+        <div className="absolute top-4 left-4 z-30 flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 shadow-xl">
           <Megaphone size={12} className="text-primary-500 fill-primary-500/20" />
           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Patrocinado</span>
         </div>
@@ -89,10 +161,10 @@ export const AdCard = memo(({ ad }: AdCardProps) => {
           <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent opacity-80" />
           
           {/* Fullscreen Hint */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 bg-black/20 backdrop-blur-[2px]">
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 bg-black/20 backdrop-blur-[2px] z-20">
              <motion.div 
-               initial={{ scale: 0.8 }}
                whileHover={{ scale: 1.1 }}
+               whileTap={{ scale: 0.9 }}
                className="p-4 rounded-full bg-primary-600 text-white shadow-[0_0_40px_rgba(230,0,0,0.5)] border border-primary-400/20"
              >
                <Maximize2 size={24} />
@@ -102,8 +174,8 @@ export const AdCard = memo(({ ad }: AdCardProps) => {
 
         {/* Content */}
         <div className="p-8">
-          <div className="flex flex-col gap-6">
-            <div>
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex flex-col">
               <h4 className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none group-hover:text-primary-400 transition-colors">
                 {ad.title}
               </h4>
@@ -113,7 +185,90 @@ export const AdCard = memo(({ ad }: AdCardProps) => {
                 </p>
               )}
             </div>
-            
+
+            <div className="flex items-center space-x-2">
+              <div className="relative" onMouseLeave={() => setShowReactions(false)}>
+                <AnimatePresence>
+                  {showReactions && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                      animate={{ opacity: 1, y: -50, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                      className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 p-1.5 bg-black/80 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl z-50 mb-2"
+                    >
+                      {REACTIONS.map((reaction) => (
+                        <motion.button
+                          key={reaction.type}
+                          whileHover={{ scale: 1.3 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            reactionMutation.mutate({ reactionType: reaction.type, isLiked: !!ad.is_liked });
+                            setShowReactions(false);
+                          }}
+                          className={cn(
+                            "p-2 rounded-full transition-colors",
+                            ad.reaction_type === reaction.type ? "bg-white/10" : "hover:bg-white/5"
+                          )}
+                        >
+                          <reaction.icon 
+                            size={20} 
+                            className={cn(
+                              reaction.color,
+                              ad.reaction_type === reaction.type && reaction.fill
+                            )} 
+                          />
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <button
+                  onMouseEnter={() => setShowReactions(true)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    reactionMutation.mutate({ 
+                      reactionType: ad.reaction_type || 'heart', 
+                      isLiked: !!ad.is_liked 
+                    });
+                  }}
+                  className={cn(
+                    "flex items-center space-x-2 rounded-xl px-4 py-2 transition-all duration-300 group/like",
+                    ad.is_liked ? "bg-primary-600/10 text-primary-400" : "text-white/40 hover:bg-white/5 hover:text-white"
+                  )}
+                >
+                  <motion.div
+                    animate={ad.is_liked ? { scale: [1, 1.2, 1] } : {}}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ReactionIcon 
+                      size={20} 
+                      className={cn(
+                        ad.is_liked ? currentReaction.fill : "group-hover/like:text-primary-400"
+                      )} 
+                    />
+                  </motion.div>
+                  <span className="text-xs font-black italic tracking-wider">{ad.likes_count || 0}</span>
+                </button>
+              </div>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  shareMutation.mutate();
+                }}
+                className={cn(
+                  "flex items-center space-x-2 rounded-xl px-4 py-2 transition-all duration-300",
+                  isSharing ? "bg-primary-600/10 text-primary-400" : "text-white/40 hover:bg-white/5 hover:text-white"
+                )}
+              >
+                <Share2 size={20} className={cn(isSharing && "animate-pulse")} />
+                <span className="text-xs font-black italic tracking-wider">{ad.shares_count || 0}</span>
+              </button>
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-6">
             {hasLink && (
               <Button
                 onClick={handleLinkClick}

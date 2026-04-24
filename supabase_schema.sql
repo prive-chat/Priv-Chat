@@ -474,6 +474,7 @@ CREATE TABLE IF NOT EXISTS public.ads (
   total_budget DECIMAL(10, 2) DEFAULT 0,
   spent_budget DECIMAL(10, 2) DEFAULT 0,
   priority INTEGER DEFAULT 0,
+  shares_count BIGINT DEFAULT 0,
   starts_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   ends_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
@@ -482,6 +483,9 @@ CREATE TABLE IF NOT EXISTS public.ads (
 -- Asegurar que todas las columnas necesarias existen (Para bases de datos ya creadas)
 DO $$ 
 BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'ads' AND column_name = 'shares_count') THEN
+    ALTER TABLE public.ads ADD COLUMN shares_count BIGINT DEFAULT 0;
+  END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'ads' AND column_name = 'starts_at') THEN
     ALTER TABLE public.ads ADD COLUMN starts_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
   END IF;
@@ -626,6 +630,45 @@ GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 GRANT EXECUTE ON FUNCTION public.increment_ad_metric(UUID, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.increment_ad_metric(UUID, TEXT) TO anon;
+
+-- 21. REACCIONES A ANUNCIOS (AD_LIKES)
+CREATE TABLE IF NOT EXISTS public.ad_likes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  ad_id UUID REFERENCES public.ads(id) ON DELETE CASCADE NOT NULL,
+  type TEXT DEFAULT 'heart',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  UNIQUE(user_id, ad_id)
+);
+
+ALTER TABLE public.ad_likes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Reacciones anuncios visibles por todos" ON public.ad_likes;
+CREATE POLICY "Reacciones anuncios visibles por todos" ON public.ad_likes FOR SELECT USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Usuarios reaccionan a anuncios" ON public.ad_likes;
+CREATE POLICY "Usuarios reaccionan a anuncios" ON public.ad_likes FOR ALL USING (auth.uid() = user_id);
+
+-- Función para compartir anuncio
+CREATE OR REPLACE FUNCTION public.increment_ad_share(p_ad_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE public.ads SET shares_count = shares_count + 1 WHERE id = p_ad_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Función para reaccionar a anuncio
+CREATE OR REPLACE FUNCTION public.toggle_ad_reaction(p_user_id UUID, p_ad_id UUID, p_reaction_type TEXT)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO public.ad_likes (user_id, ad_id, type)
+  VALUES (p_user_id, p_ad_id, p_reaction_type)
+  ON CONFLICT (user_id, ad_id) 
+  DO UPDATE SET type = EXCLUDED.type;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+GRANT EXECUTE ON FUNCTION public.increment_ad_share(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.increment_ad_share(UUID) TO anon;
+GRANT EXECUTE ON FUNCTION public.toggle_ad_reaction(UUID, UUID, TEXT) TO authenticated;
 
 -- Backfill: Asegurar que todos los usuarios de auth.users tengan un perfil
 INSERT INTO public.profiles (id, email, full_name, username, role)

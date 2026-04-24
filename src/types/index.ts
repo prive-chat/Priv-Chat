@@ -62,6 +62,10 @@ export interface Ad {
   starts_at: string;
   ends_at?: string;
   created_at: string;
+  shares_count?: number;
+  likes_count?: number;
+  is_liked?: boolean;
+  reaction_type?: string | null;
 }
 
 export interface Like {
