@@ -84,6 +84,7 @@ export default function AdModal({ onClose, onSuccess, ad }: AdModalProps) {
       const adData = {
         ...dbData,
         image_url: imageUrl,
+        cta_text: formData.cta_text || null,
         starts_at: formData.starts_at ? new Date(formData.starts_at).toISOString() : new Date().toISOString(),
         ends_at: formData.ends_at ? new Date(formData.ends_at).toISOString() : null,
       };
@@ -131,6 +132,13 @@ export default function AdModal({ onClose, onSuccess, ad }: AdModalProps) {
             placeholder="https://..."
             value={formData.link_url}
             onChange={e => setFormData({ ...formData, link_url: e.target.value })}
+          />
+
+          <Input
+            label="Texto del Botón (CTA)"
+            placeholder="Ej: Ver más, Comprar, Registrarse..."
+            value={formData.cta_text || ''}
+            onChange={e => setFormData({ ...formData, cta_text: e.target.value })}
           />
 
           <div className="grid grid-cols-2 gap-4">

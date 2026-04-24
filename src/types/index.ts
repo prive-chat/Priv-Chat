@@ -44,6 +44,7 @@ export interface Ad {
   id: string;
   title: string;
   description?: string;
+  cta_text?: string;
   image_url: string;
   link_url?: string;
   type: 'image' | 'video';

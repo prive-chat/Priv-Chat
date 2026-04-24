@@ -6,7 +6,7 @@ export const publicAdService = {
     try {
       const { data, error } = await supabase
         .from('ads')
-        .select('*')
+        .select('id, title, description, cta_text, image_url, link_url, type, placement, status, impressions, clicks, cost_per_click, cost_per_impression, total_budget, spent_budget, priority, starts_at, ends_at, created_at')
         .eq('status', 'active')
         .eq('placement', placement)
         .lte('starts_at', new Date().toISOString())

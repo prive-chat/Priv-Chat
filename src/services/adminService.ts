@@ -75,7 +75,7 @@ export const adminService = {
   async fetchAds(): Promise<Ad[]> {
     const { data, error } = await supabase
       .from('ads')
-      .select('*')
+      .select('id, title, description, cta_text, image_url, link_url, type, placement, status, impressions, clicks, cost_per_click, cost_per_impression, total_budget, spent_budget, priority, starts_at, ends_at, created_at')
       .order('created_at', { ascending: false });
     
     if (error) throw error;

@@ -19,7 +19,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string, authUserEmail?: string) => {
-    setLoading(true);
+    // Solo poner loading si no tenemos perfil o es cambio de usuario
+    if (!profile || profile.id !== userId) {
+      setLoading(true);
+    }
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -47,7 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       console.error('Unexpected error fetching profile:', err);
-      setProfile(null);
     } finally {
       setLoading(false);
     }
@@ -103,14 +105,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Auth event:', event);
       
       if (session?.user) {
+        const isNewUser = !user || user.id !== session.user.id;
         setUser(session.user);
         
-        // Always try to fetch profile on significant events, but don't block the UI
-        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        // Evitar fetch profile si el evento no es relevante y ya tenemos perfil
+        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || isNewUser) {
           fetchProfile(session.user.id, session.user.email);
-        } else if (!profile) {
-          // Safety catch: ensure profile is loaded if we have a user but no profile state
-          fetchProfile(session.user.id, session.user.email);
+        } else {
+           setLoading(false);
         }
       } else {
         setUser(null);
@@ -119,21 +121,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Check session once manually to start the process if onAuthStateChange is slow
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        fetchProfile(session.user.id, session.user.email);
-      } else {
-        setLoading(false);
-      }
-    });
-
     return () => {
       subscription.unsubscribe();
       clearTimeout(timeoutId);
     };
-  }, []);
+  }, [user?.id, profile?.id]);
 
   useEffect(() => {
     // Loading is handled within getSession and onAuthStateChange
