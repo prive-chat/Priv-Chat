@@ -60,12 +60,12 @@ export function AdCard({ ad }: AdCardProps) {
         </div>
 
         {/* Image/Video Container */}
-        <div className="relative overflow-hidden bg-black/20 aspect-video">
+        <div className="relative overflow-hidden bg-black/20">
           {ad.image_url && (
             ad.type === 'video' ? (
               <video 
                 src={ad.image_url} 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-auto max-h-[600px] object-contain transition-transform duration-700 group-hover:scale-105"
                 autoPlay
                 muted
                 loop
@@ -75,7 +75,7 @@ export function AdCard({ ad }: AdCardProps) {
               <img 
                 src={ad.image_url} 
                 alt={ad.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                className="w-full h-auto max-h-[600px] object-contain transition-transform duration-700 group-hover:scale-110"
                 referrerPolicy="no-referrer"
               />
             )
@@ -161,12 +161,12 @@ export function AdCard({ ad }: AdCardProps) {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Media Container */}
-              <div className="w-full lg:w-3/5 aspect-video lg:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl shadow-primary-600/10 border border-white/10 bg-black flex items-center justify-center shrink-0">
+              <div className="w-full lg:w-3/5 rounded-3xl overflow-hidden shadow-2xl shadow-primary-600/10 border border-white/10 bg-black flex items-center justify-center shrink-0">
                 {ad.image_url && (
                   ad.type === 'video' ? (
                     <video 
                       src={ad.image_url} 
-                      className="w-full h-full object-contain"
+                      className="w-full h-auto max-h-[70vh] object-contain"
                       autoPlay
                       controls
                       loop
@@ -176,7 +176,7 @@ export function AdCard({ ad }: AdCardProps) {
                     <img 
                       src={ad.image_url} 
                       alt={ad.title}
-                      className="w-full h-full object-contain"
+                      className="w-full h-auto max-h-[70vh] object-contain"
                       referrerPolicy="no-referrer"
                     />
                   )
