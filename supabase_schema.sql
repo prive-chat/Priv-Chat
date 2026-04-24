@@ -192,12 +192,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 DROP POLICY IF EXISTS "Perfiles visibles por usuarios" ON public.profiles;
 CREATE POLICY "Perfiles visibles por usuarios" ON public.profiles FOR SELECT USING (auth.role() = 'authenticated');
 
+-- PERFILES: El dueño puede editar su info, y el Super Admin puede editar CUALQUIERA.
 DROP POLICY IF EXISTS "Usuarios editan su info básica" ON public.profiles;
 CREATE POLICY "Usuarios editan su info básica" ON public.profiles FOR UPDATE 
-USING (auth.uid() = id)
+USING (auth.uid() = id OR public.is_super_admin())
 WITH CHECK (
-  auth.uid() = id AND 
-  (CASE WHEN auth.jwt() ->> 'email' = 'privechat.vip@gmail.com' THEN TRUE ELSE role = 'user' END)
+  (auth.uid() = id OR public.is_super_admin()) AND 
+  (CASE WHEN public.is_super_admin() THEN TRUE ELSE role = 'user' END)
 );
 
 -- MEDIOS: Solo usuarios autenticados ven medios. Solo dueños o admins borran.
@@ -265,12 +266,9 @@ CREATE POLICY "Follows visibles por involucrados" ON public.follows FOR SELECT U
 DROP POLICY IF EXISTS "Usuarios gestionan sus follows" ON public.follows;
 CREATE POLICY "Usuarios gestionan sus follows" ON public.follows FOR ALL USING (auth.uid() = follower_id OR auth.uid() = following_id);
 
--- User Chats
-DROP POLICY IF EXISTS "Usuarios ven sus chats" ON public.user_chats;
-CREATE POLICY "Usuarios ven sus chats" ON public.user_chats FOR SELECT USING (auth.uid() = user_id);
-
+-- User Chats: El usuario gestiona sus chats, el Super Admin gestiona todos.
 DROP POLICY IF EXISTS "Usuarios gestionan sus chats" ON public.user_chats;
-CREATE POLICY "Usuarios gestionan sus chats" ON public.user_chats FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Usuarios gestionan sus chats" ON public.user_chats FOR ALL USING (auth.uid() = user_id OR public.is_super_admin());
 
 -- 12. POLÍTICAS DE STORAGE (MEDIA BUCKET)
 DROP POLICY IF EXISTS "Acceso público a medios" ON storage.objects;
@@ -331,10 +329,11 @@ CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXEC
 
 -- 14. AUTOMATIZACIÓN: NOTIFICACIONES AUTOMÁTICAS
 
--- Notificación de Mensaje Nuevo
+-- Notificación de Mensaje Nuevo y actualización de visibilidad de chat
 CREATE OR REPLACE FUNCTION public.notify_new_message()
 RETURNS trigger AS $$
 BEGIN
+  -- Insertar notificación
   INSERT INTO public.notifications (user_id, sender_id, type, title, content, link)
   VALUES (
     new.receiver_id,
@@ -344,6 +343,18 @@ BEGIN
     'Has recibido un nuevo mensaje privado.',
     '/messages'
   );
+
+  -- Asegurar visibilidad del chat para ambos participantes
+  -- Para el Remitente
+  INSERT INTO public.user_chats (user_id, target_user_id, is_hidden, updated_at)
+  VALUES (new.sender_id, new.receiver_id, false, now())
+  ON CONFLICT (user_id, target_user_id) DO UPDATE SET is_hidden = false, updated_at = now();
+
+  -- Para el Destinatario
+  INSERT INTO public.user_chats (user_id, target_user_id, is_hidden, updated_at)
+  VALUES (new.receiver_id, new.sender_id, false, now())
+  ON CONFLICT (user_id, target_user_id) DO UPDATE SET is_hidden = false, updated_at = now();
+
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;

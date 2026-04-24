@@ -178,11 +178,18 @@ export const messageService = {
 
     if (error) throw error;
 
-    // Ensure chat is visible for both users when a new message is sent
-    await supabase.from('user_chats').upsert([
-      { user_id: senderId, target_user_id: receiverId, is_hidden: false, updated_at: new Date().toISOString() },
-      { user_id: receiverId, target_user_id: senderId, is_hidden: false, updated_at: new Date().toISOString() }
-    ]);
+    // Ensure chat is visible for the sender when a new message is sent
+    // The database trigger will handle the receiver's chat visibility
+    try {
+      await supabase.from('user_chats').upsert({ 
+        user_id: senderId, 
+        target_user_id: receiverId, 
+        is_hidden: false, 
+        updated_at: new Date().toISOString() 
+      });
+    } catch (chatError) {
+      console.error('Error updating sender chat state:', chatError);
+    }
 
     // Create notification for receiver
     try {
