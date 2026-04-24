@@ -85,13 +85,24 @@ CREATE TABLE IF NOT EXISTS public.messages (
   content TEXT NOT NULL,
   media_url TEXT,
   is_read BOOLEAN DEFAULT FALSE,
-  read_at TIMESTAMP WITH TIME ZONE,
+  read_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
   is_delivered BOOLEAN DEFAULT FALSE,
-  delivered_at TIMESTAMP WITH TIME ZONE,
+  delivered_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
   deleted_by_sender BOOLEAN DEFAULT FALSE,
   deleted_by_receiver BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
+
+-- Asegurar columnas de rastreo de mensajes (Migración)
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'delivered_at') THEN
+    ALTER TABLE public.messages ADD COLUMN delivered_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'read_at') THEN
+    ALTER TABLE public.messages ADD COLUMN read_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+  END IF;
+END $$;
 
 -- 6. TABLA DE NOTIFICACIONES
 CREATE TABLE IF NOT EXISTS public.notifications (
@@ -197,8 +208,7 @@ DROP POLICY IF EXISTS "Usuarios editan su info básica" ON public.profiles;
 CREATE POLICY "Usuarios editan su info básica" ON public.profiles FOR UPDATE 
 USING (auth.uid() = id OR public.is_super_admin())
 WITH CHECK (
-  (auth.uid() = id OR public.is_super_admin()) AND 
-  (CASE WHEN public.is_super_admin() THEN TRUE ELSE role = 'user' END)
+  auth.uid() = id OR public.is_super_admin()
 );
 
 -- MEDIOS: Solo usuarios autenticados ven medios. Solo dueños o admins borran.

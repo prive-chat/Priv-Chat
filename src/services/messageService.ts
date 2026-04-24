@@ -221,7 +221,7 @@ export const messageService = {
         .eq('id', messageId)
         .eq('is_read', false);
 
-      if (error && error.code !== '42703') throw error;
+      if (error && error.code !== '42703' && error.code !== 'PGRST204') throw error;
     } catch (err) {
       console.error('Error marking message as read:', err);
     }
@@ -241,8 +241,8 @@ export const messageService = {
 
       if (error) {
         // If the error is about missing columns, log a specific warning
-        if (error.code === '42703') {
-          console.warn('⚠️ Las columnas is_read o read_at no existen en la tabla messages. Por favor, ejecuta el script SQL proporcionado.');
+        if (error.code === '42703' || error.code === 'PGRST204') {
+          console.warn('⚠️ Columnas de estado no encontradas en la tabla messages. Por favor, ejecuta el script SQL.');
         } else {
           throw error;
         }
@@ -262,7 +262,7 @@ export const messageService = {
         })
         .match({ receiver_id: userId, sender_id: senderId, is_delivered: false });
 
-      if (error && error.code !== '42703') {
+      if (error && error.code !== '42703' && error.code !== 'PGRST204') {
         throw error;
       }
     } catch (err) {
