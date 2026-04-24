@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, MessageSquare, Trash2, Maximize2, CheckCircle2, Share2, Flame, Laugh, Heart as HeartIcon } from 'lucide-react';
+import { Heart, MessageSquare, Trash2, Maximize2, CheckCircle2, Share2, Flame, Laugh, Heart as HeartIcon, Copy, Facebook, Twitter, Send } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { mediaService } from '../services/mediaService';
 import { useAuth } from '../hooks/useAuth';
@@ -31,7 +31,43 @@ const MediaCard = memo(({ item, index, onView, onDelete, queryKey }: MediaCardPr
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showReactions, setShowReactions] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const shareUrl = `${window.location.origin}/post/${item.id}`;
+  const shareText = item.caption || '¡Mira esta publicación en Privé Chat!';
+
+  const shareActions = [
+    { 
+      name: 'WhatsApp', 
+      icon: Send, 
+      color: 'bg-[#25D366]', 
+      action: () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, '_blank') 
+    },
+    { 
+      name: 'Facebook', 
+      icon: Facebook, 
+      color: 'bg-[#1877F2]', 
+      action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank') 
+    },
+    { 
+      name: 'Twitter', 
+      icon: Twitter, 
+      color: 'bg-[#1DA1F2]', 
+      action: () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank') 
+    },
+    { 
+      name: 'Copiar', 
+      icon: Copy, 
+      color: 'bg-gray-600', 
+      action: async () => {
+        await navigator.clipboard.writeText(shareUrl);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      } 
+    },
+  ];
 
   const likeMutation = useMutation({
     mutationFn: ({ mediaId, reactionType, currentReaction }: { mediaId: string; reactionType: string; currentReaction?: string | null }) => {
@@ -90,13 +126,47 @@ const MediaCard = memo(({ item, index, onView, onDelete, queryKey }: MediaCardPr
   const shareMutation = useMutation({
     mutationFn: async () => {
       await mediaService.shareMedia(item.id);
-      // Copy to clipboard
-      const url = `${window.location.origin}/post/${item.id}`;
-      await navigator.clipboard.writeText(url);
+      const shareUrl = `${window.location.origin}/post/${item.id}`;
+      const shareData = {
+        title: item.caption || 'Publicación en Privé Chat',
+        text: 'Mira esta publicación en Privé Chat',
+        url: shareUrl,
+      };
+
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {
+          if ((err as Error).name !== 'AbortError') throw err;
+        }
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+      }
     },
-    onMutate: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousData = queryClient.getQueryData(queryKey);
+
+      queryClient.setQueryData(queryKey, (old: any) => {
+        if (!old) return old;
+        const updateItem = (post: MediaItem) => 
+          post.id === item.id ? { ...post, shares_count: (post.shares_count || 0) + 1 } : post;
+
+        if (old.pages) {
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => page.map(updateItem))
+          };
+        }
+        return old.map(updateItem);
+      });
+
       setIsSharing(true);
       setTimeout(() => setIsSharing(false), 2000);
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(queryKey, context?.previousData);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
@@ -250,16 +320,55 @@ const MediaCard = memo(({ item, index, onView, onDelete, queryKey }: MediaCardPr
                 </button>
               </div>
 
-              <button
-                onClick={() => shareMutation.mutate()}
-                className={cn(
-                  "flex items-center space-x-2 rounded-xl px-4 py-2 transition-all duration-300",
-                  isSharing ? "bg-primary-600/10 text-primary-400" : "text-white/40 hover:bg-white/5 hover:text-white"
-                )}
-              >
-                <Share2 size={20} className={cn(isSharing && "animate-pulse")} />
-                <span className="text-xs font-black italic tracking-wider">{item.shares_count || 0}</span>
-              </button>
+              <div className="relative" onMouseLeave={() => setShowShareMenu(false)}>
+                <AnimatePresence>
+                  {showShareMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                      animate={{ opacity: 1, y: -50, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                      className="absolute right-0 bottom-full flex items-center gap-2 p-1.5 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 mb-4"
+                    >
+                      {shareActions.map((action) => (
+                        <motion.button
+                          key={action.name}
+                          whileHover={{ scale: 1.1, y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            action.action();
+                            shareMutation.mutate();
+                            if (action.name !== 'Copiar') setShowShareMenu(false);
+                          }}
+                          className={cn(
+                            "flex flex-col items-center gap-1 p-2 rounded-xl transition-all hover:bg-white/10 min-w-[60px]",
+                            action.color.replace('bg-', 'text-')
+                          )}
+                        >
+                          <div className={cn("p-2 rounded-lg text-white", action.color)}>
+                            {action.name === 'Copiar' && isCopied ? <CheckCircle2 size={18} /> : <action.icon size={18} />}
+                          </div>
+                          <span className="text-[10px] font-bold text-white/60 uppercase tracking-tighter">
+                            {action.name === 'Copiar' && isCopied ? 'Listo' : action.name}
+                          </span>
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
+                <button
+                  onMouseEnter={() => setShowShareMenu(true)}
+                  onClick={() => setShowShareMenu(!showShareMenu)}
+                  className={cn(
+                    "flex items-center space-x-2 rounded-xl px-4 py-2 transition-all duration-300",
+                    isSharing ? "bg-primary-600/10 text-primary-400" : "text-white/40 hover:bg-white/5 hover:text-white"
+                  )}
+                >
+                  <Share2 size={20} className={cn(isSharing && "animate-pulse")} />
+                  <span className="text-xs font-black italic tracking-wider">{item.shares_count || 0}</span>
+                </button>
+              </div>
 
               {item.profiles?.is_verified && item.user_id !== user?.id && (
                 <Link

@@ -2,7 +2,7 @@ import { useState, useEffect, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { Ad } from '@/src/types';
 import { publicAdService } from '@/src/services/publicAdService';
-import { ExternalLink, Megaphone, X, Maximize2, Share2, Flame, Laugh, Heart, CheckCircle2 } from 'lucide-react';
+import { ExternalLink, Megaphone, X, Maximize2, Share2, Flame, Laugh, Heart, CheckCircle2, Copy, Facebook, Twitter, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 import { Button } from './Button';
@@ -25,7 +25,43 @@ export const AdCard = memo(({ ad, queryKey = ['active-ads', 'feed'] }: AdCardPro
   const queryClient = useQueryClient();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const shareUrl = ad.link_url || `${window.location.origin}/ad/${ad.id}`;
+  const shareText = `¡Mira esta oferta!: ${ad.title}`;
+
+  const shareActions = [
+    { 
+      name: 'WhatsApp', 
+      icon: Send, 
+      color: 'bg-[#25D366]', 
+      action: () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, '_blank') 
+    },
+    { 
+      name: 'Facebook', 
+      icon: Facebook, 
+      color: 'bg-[#1877F2]', 
+      action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank') 
+    },
+    { 
+      name: 'Twitter', 
+      icon: Twitter, 
+      color: 'bg-[#1DA1F2]', 
+      action: () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank') 
+    },
+    { 
+      name: 'Copiar', 
+      icon: Copy, 
+      color: 'bg-gray-600', 
+      action: async () => {
+        await navigator.clipboard.writeText(shareUrl);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      } 
+    },
+  ];
 
   const reactionMutation = useMutation({
     mutationFn: ({ reactionType, isLiked }: { reactionType: string; isLiked: boolean }) => {
@@ -82,8 +118,21 @@ export const AdCard = memo(({ ad, queryKey = ['active-ads', 'feed'] }: AdCardPro
   const shareMutation = useMutation({
     mutationFn: async () => {
       await publicAdService.shareAd(ad.id);
-      if (ad.link_url) {
-        await navigator.clipboard.writeText(ad.link_url);
+      const shareUrl = ad.link_url || window.location.href;
+      const shareData = {
+        title: ad.title,
+        text: `¡Mira esta oferta!: ${ad.description || ''}`,
+        url: shareUrl,
+      };
+
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {
+          if ((err as Error).name !== 'AbortError') throw err;
+        }
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
       }
     },
     onMutate: async () => {
@@ -275,19 +324,58 @@ export const AdCard = memo(({ ad, queryKey = ['active-ads', 'feed'] }: AdCardPro
                 </button>
               </div>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  shareMutation.mutate();
-                }}
-                className={cn(
-                  "flex items-center space-x-2 rounded-xl px-4 py-2 transition-all duration-300",
-                  isSharing ? "bg-primary-600/10 text-primary-400" : "text-white/40 hover:bg-white/5 hover:text-white"
-                )}
-              >
-                <Share2 size={20} className={cn(isSharing && "animate-pulse")} />
-                <span className="text-xs font-black italic tracking-wider">{ad.shares_count || 0}</span>
-              </button>
+              <div className="relative" onMouseLeave={() => setShowShareMenu(false)}>
+                <AnimatePresence>
+                  {showShareMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                      animate={{ opacity: 1, y: -50, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                      className="absolute right-0 bottom-full flex items-center gap-2 p-1.5 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 mb-4"
+                    >
+                      {shareActions.map((action) => (
+                        <motion.button
+                          key={action.name}
+                          whileHover={{ scale: 1.1, y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            action.action();
+                            shareMutation.mutate();
+                            if (action.name !== 'Copiar') setShowShareMenu(false);
+                          }}
+                          className={cn(
+                            "flex flex-col items-center gap-1 p-2 rounded-xl transition-all hover:bg-white/10 min-w-[60px]",
+                            action.color.replace('bg-', 'text-')
+                          )}
+                        >
+                          <div className={cn("p-2 rounded-lg text-white", action.color)}>
+                            {action.name === 'Copiar' && isCopied ? <CheckCircle2 size={18} /> : <action.icon size={18} />}
+                          </div>
+                          <span className="text-[10px] font-bold text-white/60 uppercase tracking-tighter">
+                            {action.name === 'Copiar' && isCopied ? 'Listo' : action.name}
+                          </span>
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <button
+                  onMouseEnter={() => setShowShareMenu(true)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowShareMenu(!showShareMenu);
+                  }}
+                  className={cn(
+                    "flex items-center space-x-2 rounded-xl px-4 py-2 transition-all duration-300",
+                    isSharing ? "bg-primary-600/10 text-primary-400" : "text-white/40 hover:bg-white/5 hover:text-white"
+                  )}
+                >
+                  <Share2 size={20} className={cn(isSharing && "animate-pulse")} />
+                  <span className="text-xs font-black italic tracking-wider">{ad.shares_count || 0}</span>
+                </button>
+              </div>
             </div>
           </div>
           
