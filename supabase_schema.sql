@@ -669,6 +669,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 GRANT EXECUTE ON FUNCTION public.increment_ad_share(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.increment_ad_share(UUID) TO anon;
 GRANT EXECUTE ON FUNCTION public.toggle_ad_reaction(UUID, UUID, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.increment_ad_metric(UUID, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.increment_ad_metric(UUID, TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION public.toggle_ad_reaction(UUID, UUID, TEXT) TO authenticated;
 
 -- Backfill: Asegurar que todos los usuarios de auth.users tengan un perfil
 INSERT INTO public.profiles (id, email, full_name, username, role)

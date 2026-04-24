@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface AdCardProps {
   ad: Ad;
+  queryKey?: any[];
 }
 
 const REACTIONS = [
@@ -19,7 +20,7 @@ const REACTIONS = [
   { type: 'laugh', icon: Laugh, color: 'text-yellow-500', fill: 'fill-yellow-500' },
 ];
 
-export const AdCard = memo(({ ad }: AdCardProps) => {
+export const AdCard = memo(({ ad, queryKey = ['active-ads', 'feed'] }: AdCardProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -28,18 +29,23 @@ export const AdCard = memo(({ ad }: AdCardProps) => {
 
   const reactionMutation = useMutation({
     mutationFn: ({ reactionType, isLiked }: { reactionType: string; isLiked: boolean }) => {
-      if (isLiked && ad.reaction_type === reactionType) {
-        return publicAdService.unlikeAd(user!.id, ad.id);
+      const currentUserId = user?.id;
+      if (!currentUserId) {
+        // Redirect to login or show modal
+        return Promise.reject('No authenticated user');
       }
-      return publicAdService.toggleReaction(user!.id, ad.id, reactionType);
+      if (isLiked && ad.reaction_type === reactionType) {
+        return publicAdService.unlikeAd(currentUserId, ad.id);
+      }
+      return publicAdService.toggleReaction(currentUserId, ad.id, reactionType);
     },
     onMutate: async ({ reactionType }) => {
-      await queryClient.cancelQueries({ queryKey: ['ads'] });
-      const previousAds = queryClient.getQueryData(['ads']);
+      await queryClient.cancelQueries({ queryKey });
+      const previousAds = queryClient.getQueryData(queryKey);
 
-      queryClient.setQueryData(['ads'], (old: any) => {
+      queryClient.setQueryData(queryKey, (old: any) => {
         if (!old) return old;
-        return old.map((item: Ad) => {
+        const updateItem = (item: Ad) => {
           if (item.id !== ad.id) return item;
           
           const isSameReaction = item.is_liked && item.reaction_type === reactionType;
@@ -57,32 +63,49 @@ export const AdCard = memo(({ ad }: AdCardProps) => {
             reaction_type: isSameReaction ? null : reactionType,
             likes_count: newLikesCount
           };
-        });
+        };
+
+        if (Array.isArray(old)) return old.map(updateItem);
+        return old;
       });
 
       return { previousAds };
     },
     onError: (err, variables, context) => {
-      queryClient.setQueryData(['ads'], context?.previousAds);
+      queryClient.setQueryData(queryKey, context?.previousAds);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['ads'] });
+      queryClient.invalidateQueries({ queryKey });
     }
   });
 
   const shareMutation = useMutation({
     mutationFn: async () => {
+      await publicAdService.shareAd(ad.id);
       if (ad.link_url) {
-        await publicAdService.shareAd(ad.id);
         await navigator.clipboard.writeText(ad.link_url);
       }
     },
-    onMutate: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousData = queryClient.getQueryData(queryKey);
+
+      queryClient.setQueryData(queryKey, (old: any) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((item: Ad) => 
+          item.id === ad.id ? { ...item, shares_count: (item.shares_count || 0) + 1 } : item
+        );
+      });
+
       setIsSharing(true);
       setTimeout(() => setIsSharing(false), 2000);
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(queryKey, context?.previousData);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['ads'] });
+      queryClient.invalidateQueries({ queryKey });
     }
   });
 
