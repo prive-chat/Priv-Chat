@@ -133,11 +133,13 @@ export const messageService = {
     return reactions;
   },
 
-  async sendMessage(senderId: string, receiverId: string, content: string, senderName: string, file?: File) {
+  async sendMessage(senderId: string, receiverId: string, content: string, senderName: string, file?: File, refPostId?: string) {
     let mediaUrl = null;
+    let mediaType: 'image' | 'video' | null = null;
 
     if (file) {
       const fileExt = file.name.split('.').pop();
+      mediaType = file.type.startsWith('video') ? 'video' : 'image';
       const fileName = `${senderId}/chat/${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
@@ -153,27 +155,13 @@ export const messageService = {
       mediaUrl = publicUrl;
     }
 
-    let finalContent = content.trim();
-    if (mediaUrl) {
-      try {
-        // If content is already JSON (like a postRef), merge mediaUrl into it
-        const parsed = JSON.parse(finalContent);
-        if (typeof parsed === 'object' && parsed !== null) {
-          parsed.mediaUrl = mediaUrl;
-          finalContent = JSON.stringify(parsed);
-        } else {
-          finalContent = JSON.stringify({ text: finalContent, mediaUrl });
-        }
-      } catch (e) {
-        // Not JSON, create new JSON
-        finalContent = JSON.stringify({ text: finalContent, mediaUrl });
-      }
-    }
-
     const { data, error } = await supabase.from('messages').insert({
       sender_id: senderId,
       receiver_id: receiverId,
-      content: finalContent,
+      content: content.trim(),
+      media_url: mediaUrl,
+      media_type: mediaType,
+      ref_post_id: refPostId
     }).select().single();
 
     if (error) throw error;
@@ -229,24 +217,12 @@ export const messageService = {
 
   async markAsRead(userId: string, senderId: string) {
     try {
-      const { error } = await supabase
-        .from('messages')
-        .update({ 
-          is_read: true,
-          read_at: new Date().toISOString(),
-          is_delivered: true,
-          delivered_at: new Date().toISOString()
-        })
-        .match({ receiver_id: userId, sender_id: senderId, is_read: false });
+      const { error } = await supabase.rpc('mark_messages_read', { 
+        p_user_id: userId, 
+        p_sender_id: senderId 
+      });
 
-      if (error) {
-        // If the error is about missing columns, log a specific warning
-        if (error.code === '42703' || error.code === 'PGRST204') {
-          console.warn('⚠️ Columnas de estado no encontradas en la tabla messages. Por favor, ejecuta el script SQL.');
-        } else {
-          throw error;
-        }
-      }
+      if (error && error.code !== '42703' && error.code !== 'PGRST204') throw error;
     } catch (err) {
       console.error('Error marking messages as read:', err);
     }

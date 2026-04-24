@@ -1,4 +1,4 @@
-name: CI - Privé Chat
+name: CI / CD - Privé Chat
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build:
-    name: Build & Lint
+  validate:
+    name: Validate & Build
     runs-on: ubuntu-latest
 
     steps:
@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check types
+      - name: Type checking
         run: npm run lint
 
       - name: Build project
@@ -33,3 +33,6 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Security Audit
+        run: npm audit --audit-level=high || true

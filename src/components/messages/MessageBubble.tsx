@@ -57,20 +57,30 @@ export const MessageBubble: FC<MessageBubbleProps> = ({
 
   const hasReactions = message.reactions && Object.keys(message.reactions).length > 0;
   const renderContent = (message: Message) => {
-    const { content } = message;
+    const { content, media_url: msgMediaUrl, media_type: msgMediaType, ref_post_id: msgRefPostId } = message;
     let text = content;
-    let mediaUrl = null;
-    let postRef = null;
+    let mediaUrl = msgMediaUrl || null;
+    let mediaType = msgMediaType || null;
+    let postRef: any = null;
 
+    // Check if there is an explicit ref_post_id
+    // Note: We might need to fetch the post if it's not pre-loaded, 
+    // but for now we look into JSON for backward compatibility
+    
     try {
       const parsed = JSON.parse(content);
       if (typeof parsed === 'object' && parsed !== null) {
         text = parsed.text || '';
-        mediaUrl = parsed.mediaUrl || null;
-        postRef = parsed.postRef || null;
+        if (!mediaUrl) mediaUrl = parsed.mediaUrl || null;
+        postRef = parsed.postRef || parsed.post || null;
       }
     } catch (e) {
       // Not JSON, just plain text
+    }
+
+    // Determine media type if not explicitly provided
+    if (mediaUrl && !mediaType) {
+      mediaType = (mediaUrl.includes('.mp4') || mediaUrl.includes('.mov')) ? 'video' : 'image';
     }
     
     return (
@@ -99,9 +109,9 @@ export const MessageBubble: FC<MessageBubbleProps> = ({
         {mediaUrl && (
           <div 
             className="relative w-full max-w-[280px] rounded-xl overflow-hidden bg-black/40 cursor-pointer group ring-1 ring-white/10"
-            onClick={() => onMediaClick(mediaUrl, mediaUrl.includes('.mp4') ? 'video' : 'image')}
+            onClick={() => onMediaClick(mediaUrl!, mediaType as 'image' | 'video')}
           >
-            {mediaUrl.includes('.mp4') ? (
+            {mediaType === 'video' ? (
               <video src={mediaUrl} className="w-full h-auto max-h-[400px] object-contain block" />
             ) : (
               <img src={mediaUrl} alt="" className="w-full h-auto max-h-[400px] object-contain block" referrerPolicy="no-referrer" />

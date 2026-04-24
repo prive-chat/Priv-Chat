@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   full_name TEXT,
   avatar_url TEXT,
   cover_url TEXT,
+  bio TEXT,
   is_verified BOOLEAN DEFAULT FALSE,
   is_private BOOLEAN DEFAULT FALSE,
   role TEXT DEFAULT 'user' CHECK (role IN ('user', 'super_admin')),
@@ -46,6 +47,9 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'cover_url') THEN
     ALTER TABLE public.profiles ADD COLUMN cover_url TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'bio') THEN
+    ALTER TABLE public.profiles ADD COLUMN bio TEXT;
   END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'is_verified') THEN
     ALTER TABLE public.profiles ADD COLUMN is_verified BOOLEAN DEFAULT FALSE;
@@ -84,6 +88,9 @@ CREATE TABLE IF NOT EXISTS public.messages (
   receiver_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   content TEXT NOT NULL,
   media_url TEXT,
+  media_type TEXT,
+  ref_post_id UUID REFERENCES public.media(id) ON DELETE SET NULL,
+  reactions JSONB DEFAULT '{}'::jsonb,
   is_read BOOLEAN DEFAULT FALSE,
   read_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
   is_delivered BOOLEAN DEFAULT FALSE,
@@ -101,6 +108,15 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'read_at') THEN
     ALTER TABLE public.messages ADD COLUMN read_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'media_type') THEN
+    ALTER TABLE public.messages ADD COLUMN media_type TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'ref_post_id') THEN
+    ALTER TABLE public.messages ADD COLUMN ref_post_id UUID REFERENCES public.media(id) ON DELETE SET NULL;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'reactions') THEN
+    ALTER TABLE public.messages ADD COLUMN reactions JSONB DEFAULT '{}'::jsonb;
   END IF;
 END $$;
 
@@ -562,61 +578,65 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
     RETURN QUERY
-    WITH latest_messages AS (
-        SELECT DISTINCT ON (
-            CASE WHEN sender_id < receiver_id THEN sender_id ELSE receiver_id END,
-            CASE WHEN sender_id < receiver_id THEN receiver_id ELSE sender_id END
-        )
-        sender_id, receiver_id, content, created_at
-        FROM public.messages
-        WHERE (sender_id = p_user_id AND deleted_by_sender = FALSE) 
-           OR (receiver_id = p_user_id AND deleted_by_receiver = FALSE)
-        ORDER BY 
-            CASE WHEN sender_id < receiver_id THEN sender_id ELSE receiver_id END,
-            CASE WHEN sender_id < receiver_id THEN receiver_id ELSE sender_id END,
-            created_at DESC
-    ),
-    active_chats AS (
-        -- Combinamos usuarios con mensajes recientes y usuarios con chats marcados como visibles (Vaciar chat)
-        SELECT 
-            uc.target_user_id as other_id,
-            NULL::text as msg_content,
-            uc.updated_at as msg_at
+    WITH active_participants AS (
+        -- Usuarios con los que tenemos un chat explícito en user_chats (aunque no haya mensajes aún)
+        SELECT uc.target_user_id as other_id, uc.updated_at as activity_at
         FROM public.user_chats uc
         WHERE uc.user_id = p_user_id AND uc.is_hidden = FALSE
         
         UNION
         
+        -- Usuarios con los que tenemos mensajes (no borrados para nosotros)
         SELECT 
-            (CASE WHEN lm.sender_id = p_user_id THEN lm.receiver_id ELSE lm.sender_id END) as other_id,
-            lm.content as msg_content,
-            lm.created_at as msg_at
-        FROM latest_messages lm
+            (CASE WHEN m.sender_id = p_user_id THEN m.receiver_id ELSE m.sender_id END) as other_id,
+            m.created_at as activity_at
+        FROM public.messages m
+        WHERE (m.sender_id = p_user_id AND m.deleted_by_sender = FALSE)
+           OR (m.receiver_id = p_user_id AND m.deleted_by_receiver = FALSE)
     ),
-    final_conversations AS (
-        SELECT DISTINCT ON (other_id)
-            other_id,
-            msg_content,
-            msg_at
-        FROM active_chats
-        ORDER BY other_id, msg_at DESC
+    unique_participants AS (
+        SELECT other_id, MAX(activity_at) as last_activity
+        FROM active_participants
+        GROUP BY other_id
     )
     SELECT 
-        fc.other_id as other_user_id,
-        fc.msg_content as last_message,
-        fc.msg_at as last_message_at,
+        up.other_id as other_user_id,
+        (
+            SELECT m.content 
+            FROM public.messages m 
+            WHERE ((m.sender_id = p_user_id AND m.receiver_id = up.other_id AND m.deleted_by_sender = FALSE)
+               OR (m.receiver_id = p_user_id AND m.sender_id = up.other_id AND m.deleted_by_receiver = FALSE))
+            ORDER BY m.created_at DESC 
+            LIMIT 1
+        ) as last_message,
+        up.last_activity as last_message_at,
         (
             SELECT count(*) 
-            FROM public.notifications n 
-            WHERE n.user_id = p_user_id 
-            AND n.sender_id = fc.other_id
-            AND n.is_read = FALSE
-            AND n.type = 'message'
+            FROM public.messages m 
+            WHERE m.receiver_id = p_user_id 
+            AND m.sender_id = up.other_id
+            AND m.is_read = FALSE
+            AND m.deleted_by_receiver = FALSE
         ) as unread_count,
         to_jsonb(p) as profile
-    FROM final_conversations fc
-    JOIN public.profiles p ON p.id = fc.other_id
-    ORDER BY fc.msg_at DESC;
+    FROM unique_participants up
+    JOIN public.profiles p ON p.id = up.other_id
+    ORDER BY up.last_activity DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Función para marcar todos como leídos eficientemente
+CREATE OR REPLACE FUNCTION public.mark_messages_read(p_user_id UUID, p_sender_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE public.messages 
+    SET is_read = TRUE, 
+        read_at = NOW(),
+        is_delivered = TRUE,
+        delivered_at = COALESCE(delivered_at, NOW())
+    WHERE receiver_id = p_user_id 
+      AND sender_id = p_sender_id 
+      AND is_read = FALSE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 

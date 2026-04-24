@@ -31,6 +31,9 @@ export interface Message {
   sender_id: string;
   receiver_id: string;
   content: string;
+  media_url?: string | null;
+  media_type?: 'image' | 'video' | null;
+  ref_post_id?: string | null;
   is_read: boolean;
   read_at?: string;
   is_delivered?: boolean;
