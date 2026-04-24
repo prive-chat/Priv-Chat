@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Ad } from '@/src/types';
 import { publicAdService } from '@/src/services/publicAdService';
 import { ExternalLink, Megaphone, X, Maximize2 } from 'lucide-react';
@@ -132,41 +133,41 @@ export function AdCard({ ad }: AdCardProps) {
         </div>
       </motion.div>
 
-      {/* Fullscreen Overlay */}
-      <AnimatePresence>
-        {isFullscreen && (
+      {/* Fullscreen Overlay using Portal */}
+      {isFullscreen && createPortal(
+        <AnimatePresence mode="wait">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 lg:p-12 overflow-y-auto"
+            className="fixed inset-0 z-[99999] bg-black/98 backdrop-blur-3xl flex flex-col items-center justify-center p-4 lg:p-12 overflow-y-auto"
             onClick={() => setIsFullscreen(false)}
           >
             {/* Close Button */}
             <button 
-              className="absolute top-6 right-6 lg:top-12 lg:right-12 p-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-all z-[110]"
+              className="fixed top-6 right-6 lg:top-12 lg:right-12 p-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-all z-[100000] shadow-2xl"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsFullscreen(false);
               }}
             >
-              <X size={24} />
+              <X size={32} />
             </button>
 
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              initial={{ scale: 0.9, opacity: 0, y: 30 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              exit={{ scale: 0.9, opacity: 0, y: 30 }}
               className="w-full max-w-6xl flex flex-col lg:flex-row items-center gap-8 lg:gap-16 my-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Media Container */}
-              <div className="w-full lg:w-3/5 rounded-3xl overflow-hidden shadow-2xl shadow-primary-600/10 border border-white/10 bg-black flex items-center justify-center shrink-0">
+              <div className="w-full lg:w-3/5 rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/10 bg-black flex items-center justify-center shrink-0">
                 {ad.image_url && (
                   ad.type === 'video' ? (
                     <video 
                       src={ad.image_url} 
-                      className="w-full h-auto max-h-[70vh] object-contain"
+                      className="w-full h-auto max-h-[75vh] object-contain"
                       autoPlay
                       controls
                       loop
@@ -176,7 +177,7 @@ export function AdCard({ ad }: AdCardProps) {
                     <img 
                       src={ad.image_url} 
                       alt={ad.title}
-                      className="w-full h-auto max-h-[70vh] object-contain"
+                      className="w-full h-auto max-h-[75vh] object-contain shadow-2xl"
                       referrerPolicy="no-referrer"
                     />
                   )
@@ -184,17 +185,19 @@ export function AdCard({ ad }: AdCardProps) {
               </div>
 
               {/* Text Container */}
-              <div className="w-full lg:w-2/5 space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-center lg:justify-start gap-2 text-primary-400">
-                    <Megaphone size={18} />
-                    <span className="text-xs font-black uppercase tracking-[0.2em]">Destacado</span>
+              <div className="w-full lg:w-2/5 space-y-10 flex flex-col items-center lg:items-start text-center lg:text-left">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-center lg:justify-start gap-3 text-primary-400">
+                    <div className="p-2 rounded-xl bg-primary-600/10 backdrop-blur-xl border border-primary-600/20">
+                      <Megaphone size={24} />
+                    </div>
+                    <span className="text-sm font-black uppercase tracking-[0.3em]">Destacado</span>
                   </div>
-                  <h2 className="text-4xl lg:text-6xl font-black text-white italic uppercase tracking-tighter leading-[0.9]">
+                  <h2 className="text-5xl lg:text-7xl font-black text-white italic uppercase tracking-tighter leading-[0.85]">
                     {ad.title}
                   </h2>
                   {ad.description && (
-                    <p className="text-base lg:text-lg text-white/60 leading-relaxed max-w-lg font-medium">
+                    <p className="text-lg lg:text-xl text-white/50 leading-relaxed max-w-lg font-medium">
                       {ad.description}
                     </p>
                   )}
@@ -205,22 +208,23 @@ export function AdCard({ ad }: AdCardProps) {
                     onClick={handleLinkClick}
                     variant="primary"
                     size="lg"
-                    className="w-full sm:w-auto px-12 h-16 text-xl font-black uppercase tracking-widest italic shadow-[0_0_30px_rgba(230,0,0,0.3)] transition-all hover:scale-105"
+                    className="w-full sm:w-auto px-16 h-20 text-2xl font-black uppercase tracking-widest italic shadow-[0_0_50px_rgba(230,0,0,0.4)] transition-all hover:scale-105 hover:shadow-[0_0_70px_rgba(230,0,0,0.6)]"
                   >
                     {ad.cta_text || 'Saber más'}
-                    <ExternalLink size={24} className="ml-3" />
+                    <ExternalLink size={28} className="ml-4" />
                   </Button>
                 )}
 
-                <div className="pt-8 border-t border-white/5 w-full flex items-center justify-center lg:justify-start gap-4">
-                   <div className="h-2 w-2 rounded-full bg-primary-600" />
-                   <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em]">Privé Chat Platinum Partner</span>
+                <div className="pt-10 border-t border-white/5 w-full flex items-center justify-center lg:justify-start gap-5">
+                   <div className="h-3 w-3 rounded-full bg-primary-600 animate-pulse" />
+                   <span className="text-xs font-black text-white/20 uppercase tracking-[0.4em]">Privé Chat Platinum Partner</span>
                 </div>
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 }
