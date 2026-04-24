@@ -254,47 +254,50 @@ const MediaCard = memo(({ item, index, onView, onDelete, queryKey }: MediaCardPr
               </div>
             </Link>
             <div className="flex items-center space-x-2">
-              <div className="relative" onMouseLeave={() => setShowReactions(false)}>
+              <div className="relative" onMouseEnter={() => setShowReactions(true)} onMouseLeave={() => setShowReactions(false)}>
                 <AnimatePresence>
                   {showReactions && (
                     <motion.div
                       initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                      animate={{ opacity: 1, y: -50, scale: 1 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.8 }}
-                      className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 p-1.5 bg-black/80 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl z-50 mb-2"
+                      className="absolute bottom-full left-1/2 -translate-x-1/2 flex items-center gap-2 p-1.5 bg-black/90 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl z-50 mb-2 pb-4"
                     >
-                      {REACTIONS.map((reaction) => (
-                        <motion.button
-                          key={reaction.type}
-                          whileHover={{ scale: 1.3 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => {
-                            likeMutation.mutate({ 
-                              mediaId: item.id, 
-                              reactionType: reaction.type,
-                              currentReaction: item.reaction_type
-                            });
-                            setShowReactions(false);
-                          }}
-                          className={cn(
-                            "p-2 rounded-full transition-colors",
-                            item.reaction_type === reaction.type ? "bg-white/10" : "hover:bg-white/5"
-                          )}
-                        >
-                          <reaction.icon 
-                            size={20} 
+                      <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-full border border-white/5">
+                        {REACTIONS.map((reaction) => (
+                          <motion.button
+                            key={reaction.type}
+                            whileHover={{ scale: 1.3 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => {
+                              likeMutation.mutate({ 
+                                mediaId: item.id, 
+                                reactionType: reaction.type,
+                                currentReaction: item.reaction_type
+                              });
+                              setShowReactions(false);
+                            }}
                             className={cn(
-                              reaction.color,
-                              item.reaction_type === reaction.type && reaction.fill
-                            )} 
-                          />
-                        </motion.button>
-                      ))}
+                              "p-2 rounded-full transition-colors",
+                              item.reaction_type === reaction.type ? "bg-white/10" : "hover:bg-white/5"
+                            )}
+                          >
+                            <reaction.icon 
+                              size={20} 
+                              className={cn(
+                                reaction.color,
+                                item.reaction_type === reaction.type && reaction.fill
+                              )} 
+                            />
+                          </motion.button>
+                        ))}
+                      </div>
+                      {/* Invisible bridge to prevent closing */}
+                      <div className="absolute -bottom-2 left-0 right-0 h-4 bg-transparent" />
                     </motion.div>
                   )}
                 </AnimatePresence>
                 <button
-                  onMouseEnter={() => setShowReactions(true)}
                   onClick={() => likeMutation.mutate({ 
                     mediaId: item.id, 
                     reactionType: item.reaction_type || 'heart',
@@ -320,45 +323,48 @@ const MediaCard = memo(({ item, index, onView, onDelete, queryKey }: MediaCardPr
                 </button>
               </div>
 
-              <div className="relative" onMouseLeave={() => setShowShareMenu(false)}>
+              <div className="relative" onMouseEnter={() => setShowShareMenu(true)} onMouseLeave={() => setShowShareMenu(false)}>
                 <AnimatePresence>
                   {showShareMenu && (
                     <motion.div
                       initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                      animate={{ opacity: 1, y: -50, scale: 1 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.8 }}
-                      className="absolute right-0 bottom-full flex items-center gap-2 p-1.5 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 mb-4"
+                      className="absolute right-0 bottom-full flex items-center gap-2 p-1.5 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 mb-2 pb-4"
                     >
-                      {shareActions.map((action) => (
-                        <motion.button
-                          key={action.name}
-                          whileHover={{ scale: 1.1, y: -2 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            action.action();
-                            shareMutation.mutate();
-                            if (action.name !== 'Copiar') setShowShareMenu(false);
-                          }}
-                          className={cn(
-                            "flex flex-col items-center gap-1 p-2 rounded-xl transition-all hover:bg-white/10 min-w-[60px]",
-                            action.color.replace('bg-', 'text-')
-                          )}
-                        >
-                          <div className={cn("p-2 rounded-lg text-white", action.color)}>
-                            {action.name === 'Copiar' && isCopied ? <CheckCircle2 size={18} /> : <action.icon size={18} />}
-                          </div>
-                          <span className="text-[10px] font-bold text-white/60 uppercase tracking-tighter">
-                            {action.name === 'Copiar' && isCopied ? 'Listo' : action.name}
-                          </span>
-                        </motion.button>
-                      ))}
+                      <div className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/5">
+                        {shareActions.map((action) => (
+                          <motion.button
+                            key={action.name}
+                            whileHover={{ scale: 1.1, y: -2 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              action.action();
+                              shareMutation.mutate();
+                              if (action.name !== 'Copiar') setShowShareMenu(false);
+                            }}
+                            className={cn(
+                              "flex flex-col items-center gap-1 p-2 rounded-xl transition-all hover:bg-white/10 min-w-[60px]",
+                              action.color.replace('bg-', 'text-')
+                            )}
+                          >
+                            <div className={cn("p-2 rounded-lg text-white", action.color)}>
+                              {action.name === 'Copiar' && isCopied ? <CheckCircle2 size={18} /> : <action.icon size={18} />}
+                            </div>
+                            <span className="text-[10px] font-bold text-white/60 uppercase tracking-tighter">
+                              {action.name === 'Copiar' && isCopied ? 'Listo' : action.name}
+                            </span>
+                          </motion.button>
+                        ))}
+                      </div>
+                      {/* Invisible bridge to prevent closing */}
+                      <div className="absolute -bottom-2 left-0 right-0 h-4 bg-transparent" />
                     </motion.div>
                   )}
                 </AnimatePresence>
                 
                 <button
-                  onMouseEnter={() => setShowShareMenu(true)}
                   onClick={() => setShowShareMenu(!showShareMenu)}
                   className={cn(
                     "flex items-center space-x-2 rounded-xl px-4 py-2 transition-all duration-300",
