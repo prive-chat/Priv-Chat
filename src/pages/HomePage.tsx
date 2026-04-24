@@ -1,32 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import MediaFeed from '../features/feed/MediaFeed';
 import UserDirectory from '../features/users/UserDirectory';
 import HomeActionArea from '../features/home/HomeActionArea';
 import TrendingSidebar from '../features/feed/TrendingSidebar';
 import { Button } from '../components/ui/Button';
 import { Plus, LayoutGrid, ShieldAlert, Users, Megaphone } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../hooks/useAuth';
 import { useUIStore } from '../store/uiStore';
 import { cn } from '../lib/utils';
-import { Ad } from '../types';
 import { publicAdService } from '../services/publicAdService';
 import { AdCard } from '../components/ui/AdCard';
 import UserIdentityBar from '../components/layout/UserIdentityBar';
+import { useQuery } from '@tanstack/react-query';
 
 export default function HomePage() {
   const [view, setView] = useState<'feed' | 'users'>('feed');
-  const [ads, setAds] = useState<Ad[]>([]);
   const { profile } = useAuth();
   const setActiveModal = useUIStore((state) => state.setActiveModal);
 
-  useEffect(() => {
-    const fetchAds = async () => {
-      const activeAds = await publicAdService.getActiveAds('feed');
-      setAds(activeAds);
-    };
-    fetchAds();
-  }, []);
+  const { data: ads = [] } = useQuery({
+    queryKey: ['active-ads', 'feed'],
+    queryFn: () => publicAdService.getActiveAds('feed'),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   return (
     <>

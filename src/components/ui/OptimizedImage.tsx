@@ -1,6 +1,6 @@
 import { useState, useMemo, ImgHTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/src/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Image as ImageIcon } from 'lucide-react';
 import { getOptimizedImageUrl, ImageTransformOptions } from '@/src/lib/images';
 
@@ -51,12 +51,14 @@ export function OptimizedImage({
         </div>
       ) : (
         <motion.img
-          src={optimizedSrc}
+          src={optimizedSrc || ''}
           alt={alt}
-          className={className}
+          className={cn("w-full h-full", className)}
           onLoad={() => setIsLoaded(true)}
           onError={() => setHasError(true)}
           referrerPolicy="no-referrer"
+          loading="lazy"
+          decoding="async"
           initial={false}
           animate={isLoaded ? { opacity: 1, scale: 1, filter: 'blur(0px)' } : { opacity: 0, scale: 1.05, filter: 'blur(20px)' }}
           transition={{ duration: 0.7 }}
