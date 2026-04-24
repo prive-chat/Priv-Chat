@@ -10,7 +10,7 @@ export const mediaService = {
     
     const { data, error } = await supabase
       .from('media')
-      .select('*, profiles(*), likes(count)')
+      .select('*, profiles(*), likes(count), shares_count')
       .order('created_at', { ascending: false })
       .range(page * limit, (page + 1) * limit - 1);
 
@@ -26,15 +26,16 @@ export const mediaService = {
       const mediaIds = transformedData.map(item => item.id);
       const { data: userLikes } = await supabase
         .from('likes')
-        .select('media_id')
+        .select('media_id, type')
         .eq('user_id', userId)
         .in('media_id', mediaIds);
 
       if (userLikes) {
-        const likedIds = new Set(userLikes.map(l => l.media_id));
+        const reactions = new Map(userLikes.map(l => [l.media_id, l.type]));
         transformedData = transformedData.map(item => ({
           ...item,
-          is_liked: likedIds.has(item.id)
+          is_liked: reactions.has(item.id),
+          reaction_type: reactions.get(item.id) || null
         }));
       }
     }
@@ -48,7 +49,7 @@ export const mediaService = {
 
     const { data, error } = await supabase
       .from('media')
-      .select('*, profiles(*), likes(count)')
+      .select('*, profiles(*), likes(count), shares_count')
       .gte('created_at', sevenDaysAgo.toISOString())
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -65,15 +66,16 @@ export const mediaService = {
       const mediaIds = transformedData.map(item => item.id);
       const { data: userLikes } = await supabase
         .from('likes')
-        .select('media_id')
+        .select('media_id, type')
         .eq('user_id', userId)
         .in('media_id', mediaIds);
 
       if (userLikes) {
-        const likedIds = new Set(userLikes.map(l => l.media_id));
+        const reactions = new Map(userLikes.map(l => [l.media_id, l.type]));
         transformedData = transformedData.map(item => ({
           ...item,
-          is_liked: likedIds.has(item.id)
+          is_liked: reactions.has(item.id),
+          reaction_type: reactions.get(item.id) || null
         }));
       }
     }
@@ -81,7 +83,7 @@ export const mediaService = {
     return transformedData as MediaItem[];
   },
 
-  async likeMedia(userId: string, mediaId: string) {
+  async likeMedia(userId: string, mediaId: string, reactionType: string = 'heart') {
     // First fetch media to know the owner
     const { data: media, error: mediaError } = await supabase
       .from('media')
@@ -93,9 +95,13 @@ export const mediaService = {
 
     const { error } = await supabase
       .from('likes')
-      .insert({ user_id: userId, media_id: mediaId });
+      .upsert({ 
+        user_id: userId, 
+        media_id: mediaId,
+        type: reactionType 
+      }, { onConflict: 'user_id, media_id' });
 
-    if (error && error.code !== '23505') throw error; // Ignore duplicate likes
+    if (error) throw error;
 
     // Create notification if it's not the user's own post
     if (media.user_id !== userId) {
@@ -140,33 +146,36 @@ export const mediaService = {
   async fetchMediaItem(id: string, userId?: string) {
     const { data, error } = await supabase
       .from('media')
-      .select('*, profiles(*), likes(count)')
+      .select('*, profiles(*), likes(count), shares_count')
       .eq('id', id)
       .single();
 
     if (error) throw error;
     
     let is_liked = false;
+    let reaction_type = null;
     if (userId) {
       const { data: likeData } = await supabase
         .from('likes')
-        .select('id')
+        .select('id, type')
         .match({ user_id: userId, media_id: id })
         .single();
       is_liked = !!likeData;
+      reaction_type = likeData?.type || null;
     }
 
     return {
       ...data,
       likes_count: data.likes?.[0]?.count || 0,
-      is_liked
+      is_liked,
+      reaction_type
     } as MediaItem;
   },
 
   async fetchUserMedia(userId: string, currentUserId?: string, page = 0, limit = 12) {
     const { data, error } = await supabase
       .from('media')
-      .select('*, profiles(*), likes(count)')
+      .select('*, profiles(*), likes(count), shares_count')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .range(page * limit, (page + 1) * limit - 1);
@@ -183,15 +192,16 @@ export const mediaService = {
       const mediaIds = transformedData.map(item => item.id);
       const { data: userLikes } = await supabase
         .from('likes')
-        .select('media_id')
+        .select('media_id, type')
         .eq('user_id', currentUserId)
         .in('media_id', mediaIds);
 
       if (userLikes) {
-        const likedIds = new Set(userLikes.map(l => l.media_id));
+        const reactions = new Map(userLikes.map(l => [l.media_id, l.type]));
         transformedData = transformedData.map(item => ({
           ...item,
-          is_liked: likedIds.has(item.id)
+          is_liked: reactions.has(item.id),
+          reaction_type: reactions.get(item.id) || null
         }));
       }
     }
@@ -276,6 +286,11 @@ export const mediaService = {
 
     if (dbError) throw dbError;
     return data;
+  },
+
+  async shareMedia(mediaId: string) {
+    const { error } = await supabase.rpc('increment_media_share', { p_media_id: mediaId });
+    if (error) throw error;
   },
 
   getThumbnailUrl(url: string, width = 400, height = 400) {

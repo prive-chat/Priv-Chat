@@ -18,10 +18,12 @@ export interface MediaItem {
   url: string;
   type: 'image' | 'video';
   caption?: string;
+  shares_count?: number;
   created_at: string;
   profiles?: UserProfile;
   likes_count?: number;
   is_liked?: boolean;
+  reaction_type?: string | null;
 }
 
 export interface Message {

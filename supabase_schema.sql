@@ -65,8 +65,17 @@ CREATE TABLE IF NOT EXISTS public.media (
   url TEXT NOT NULL,
   type TEXT CHECK (type IN ('image', 'video')) NOT NULL,
   caption TEXT,
+  shares_count BIGINT DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
+
+-- Migración: Asegurar columna shares_count
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'media' AND column_name = 'shares_count') THEN
+    ALTER TABLE public.media ADD COLUMN shares_count BIGINT DEFAULT 0;
+  END IF;
+END $$;
 
 -- 5. TABLA DE MENSAJES (MESSAGES)
 CREATE TABLE IF NOT EXISTS public.messages (
@@ -102,9 +111,37 @@ CREATE TABLE IF NOT EXISTS public.likes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   media_id UUID REFERENCES public.media(id) ON DELETE CASCADE NOT NULL,
+  type TEXT DEFAULT 'heart',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   UNIQUE(user_id, media_id)
 );
+
+-- Migración: Asegurar columna type
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'likes' AND column_name = 'type') THEN
+    ALTER TABLE public.likes ADD COLUMN type TEXT DEFAULT 'heart';
+  END IF;
+END $$;
+
+-- Función para compartir media
+CREATE OR REPLACE FUNCTION public.increment_media_share(p_media_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE public.media SET shares_count = shares_count + 1 WHERE id = p_media_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Función para reaccionar a media
+CREATE OR REPLACE FUNCTION public.toggle_media_reaction(p_user_id UUID, p_media_id UUID, p_reaction_type TEXT)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO public.likes (user_id, media_id, type)
+  VALUES (p_user_id, p_media_id, p_reaction_type)
+  ON CONFLICT (user_id, media_id) 
+  DO UPDATE SET type = EXCLUDED.type;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- 8. TABLA DE SEGUIDORES (FOLLOWS)
 CREATE TABLE IF NOT EXISTS public.follows (
