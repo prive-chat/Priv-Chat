@@ -1,102 +1,64 @@
-const CACHE_NAME = 'prive-chat-prod-v1';
+const CACHE_NAME = 'prive-chat-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/favicon-32.png',
   '/icon-192.png',
-  '/icon-512.png',
-  '/icon.png'
+  '/icon-512.png'
 ];
 
-// Install: Cache critical assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   );
+  self.skipWaiting();
 });
 
-// Activate: Clear ALL old caches to ensure zero garbage
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          // Si no es el caché actual, BORRAR SIN MISERICORDIA
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys().then((keys) => {
+      return Promise.all(keys.map((key) => {
+        if (key !== CACHE_NAME) return caches.delete(key);
+      }));
+    })
   );
+  self.clients.claim();
 });
 
-// Fetch Strategy
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-
-  // No interceptar peticiones externas (Supabase, etc) o que no sean GET
-  if (event.request.method !== 'GET' || 
-      !url.origin.includes(self.location.origin) ||
-      url.hostname.includes('supabase.co')) {
-    return;
-  }
-
-  // Navegación: Network-first con fallback a index.html
+  // Manejo de navegación para PWA
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .catch(async () => {
-          const cachedIndex = await caches.match('/index.html') || await caches.match('/');
-          if (cachedIndex) return cachedIndex;
-          // Fallback final si no hay nada en cache (evita error de conversión)
-          return new Response('Red de Privé Chat no disponible. Por favor, recarga.', {
-            status: 503,
-            statusText: 'Service Unavailable',
-            headers: new Headers({ 'Content-Type': 'text/plain' })
-          });
-        })
+      fetch(event.request).catch(() => caches.match('/index.html'))
     );
     return;
   }
 
-  // Pantalla de navegación y assets estáticos generales
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const networkFetch = fetch(event.request).then((response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-        }
-        return response;
-      }).catch(() => cached);
-
-      return cached || networkFetch;
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
     })
   );
 });
 
 // Push Notifications
 self.addEventListener('push', (event) => {
-  let data = { title: 'Privé Chat', body: 'Nueva notificación recibida' };
+  let data = { title: 'Privé Chat', body: 'Nueva notificación' };
   try {
     if (event.data) data = event.data.json();
   } catch (e) {}
 
   const options = {
     body: data.body,
-    data: { url: data.url || '/' },
-    vibrate: [100, 50, 100],
-    actions: [{ action: 'open', title: 'Ver' }]
+    icon: '/icon-192.png',
+    badge: '/favicon-32.png',
+    data: { url: data.url || '/' }
   };
 
   event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
-// Notification Click
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(

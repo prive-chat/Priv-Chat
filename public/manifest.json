@@ -1,16 +1,12 @@
 {
-  "id": "com.privechat.app",
-  "short_name": "Privé Chat",
   "name": "Privé Chat | Enclave Digital de Élite",
+  "short_name": "Privé Chat",
   "description": "Mensajería segura de grado empresarial con privacidad absoluta y diseño exclusivo.",
-  "lang": "es",
-  "dir": "ltr",
-  "start_url": "/?source=pwa",
+  "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#050505",
   "theme_color": "#050505",
-  "categories": ["social", "personalization"],
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/favicon-32.png",
@@ -34,20 +30,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Mensajes",
-      "short_name": "Mensajes",
-      "url": "/messages",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Mi Perfil",
-      "short_name": "Perfil",
-      "url": "/settings",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
