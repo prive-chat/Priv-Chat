@@ -51,35 +51,31 @@ export default function App() {
     <>
       <ScrollToTop />
       <InstallPrompt />
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-black text-white">
         <ToastContainer />
         <Suspense fallback={<LoadingScreen />}>
-          {user ? (
-            <>
-              <Navbar />
-              <NotificationManager />
-              <ModalCenter />
-              <main>
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/messages" element={<MessagesPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/profile/:userId" element={<UserProfilePage />} />
-                  <Route path="/post/:postId" element={<PostPage />} />
-                  <Route path="/auth" element={<Navigate to="/" replace />} />
-                  {profile?.role?.toLowerCase().trim() === 'super_admin' && (
-                    <Route path="/admin" element={<AdminPage />} />
-                  )}
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </main>
-            </>
-          ) : (
+          <Navbar />
+          <NotificationManager />
+          <ModalCenter />
+          <main>
             <Routes>
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="*" element={<Navigate to="/auth" replace />} />
+              {/* Public Routes */}
+              <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/" replace />} />
+              <Route path="/profile/:userId" element={<UserProfilePage />} />
+              <Route path="/post/:postId" element={<PostPage />} />
+              
+              {/* Protected Routes */}
+              <Route path="/" element={user ? <HomePage /> : <Navigate to="/auth" replace />} />
+              <Route path="/messages" element={user ? <MessagesPage /> : <Navigate to="/auth" replace />} />
+              <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/auth" replace />} />
+              
+              {profile?.role?.toLowerCase().trim() === 'super_admin' && (
+                <Route path="/admin" element={user ? <AdminPage /> : <Navigate to="/auth" replace />} />
+              )}
+              
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
-          )}
+          </main>
         </Suspense>
       </div>
     </>
