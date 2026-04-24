@@ -47,7 +47,16 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .catch(() => caches.match('/index.html') || caches.match('/'))
+        .catch(async () => {
+          const cachedIndex = await caches.match('/index.html') || await caches.match('/');
+          if (cachedIndex) return cachedIndex;
+          // Fallback final si no hay nada en cache (evita error de conversión)
+          return new Response('Red de Privé Chat no disponible. Por favor, recarga.', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: new Headers({ 'Content-Type': 'text/plain' })
+          });
+        })
     );
     return;
   }

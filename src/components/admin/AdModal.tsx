@@ -12,8 +12,8 @@ interface AdModalProps {
 }
 
 export default function AdModal({ onClose, onSuccess, ad }: AdModalProps) {
-  const [formData, setFormData] = useState<Partial<Ad>>(
-    ad || {
+  const [formData, setFormData] = useState<Partial<Ad>>(() => {
+    if (!ad) return {
       title: '',
       description: '',
       link_url: '',
@@ -26,8 +26,12 @@ export default function AdModal({ onClose, onSuccess, ad }: AdModalProps) {
       cost_per_impression: 0,
       total_budget: 0,
       priority: 0,
-    }
-  );
+    };
+    
+    // Clean ad object to remove any UI-only properties like onSuccess
+    const { onSuccess: _, ...cleanAd } = ad as any;
+    return cleanAd;
+  });
   
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(ad?.image_url || null);
@@ -74,8 +78,11 @@ export default function AdModal({ onClose, onSuccess, ad }: AdModalProps) {
         imageUrl = uploadRes.url;
       }
 
+      // Prepare data for database (Strip non-column properties like onSuccess if they snuck in)
+      const { onSuccess: _, ...dbData } = formData as any;
+
       const adData = {
-        ...formData,
+        ...dbData,
         image_url: imageUrl,
         starts_at: formData.starts_at ? new Date(formData.starts_at).toISOString() : new Date().toISOString(),
         ends_at: formData.ends_at ? new Date(formData.ends_at).toISOString() : null,
